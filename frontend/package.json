@@ -1,0 +1,9 @@
+{
+    "name": "job-hunter",
+    "version": "0.0.1",
+    "description": "Display programming jobs analysis",
+    "author": "yeyu456 <yeyu456@gmail.com>",
+    "license": "MIT",
+    "devDependencies": {
+    }
+}
