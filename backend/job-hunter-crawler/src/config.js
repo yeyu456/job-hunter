@@ -48,3 +48,11 @@ export const LogType = {
 };
 
 export const LOG_LEVEL = LogType.WARN; // 0:log 1:warn 2:error 3:fatal
+
+
+
+//****************** CACHE ******************//
+
+export const CACHE_TIME = ONE_DAY;
+
+export const CACHE_CLEAN_TRESHOLD = 1000;

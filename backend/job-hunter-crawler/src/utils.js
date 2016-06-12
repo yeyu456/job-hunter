@@ -1,4 +1,4 @@
-let urlencode = require('urlencode');
+const urlencode = require('urlencode');
 import {USER_AGENTS, START_TIME, CITIES, JOB_TYPES} from './config';
 
 export function getUserAgent() {

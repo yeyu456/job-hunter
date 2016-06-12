@@ -1,5 +1,5 @@
 
-let nodemailer = require('nodemailer');
+const nodemailer = require('nodemailer');
 import {ENABLE_EMAIL, LOG_PATH, ERROR_PATH, LOG_LEVEL, LogType} from './config';
 
 const output = fs.createWriteStream(LOG_PATH);

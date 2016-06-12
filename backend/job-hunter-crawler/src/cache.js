@@ -1,3 +1,5 @@
+const EventEmitter = require('events');
+import {CACHE_TIME} from './config';
 
 export default class Cache {
 
@@ -6,92 +8,76 @@ export default class Cache {
         this.hitCount = 0;
         this.missCount = 0;
         this.size = 0;
+        this._initCleaner();
     }
 
-    put(key, value, time, timeoutCallback) {
-        if (debug) {
-            console.log('caching: %s = %j (@%s)', key, value, time);
-        }
-
-        if (typeof time !== 'undefined' && (typeof time !== 'number' || isNaN(time) || time <= 0)) {
-            throw new Error('Cache timeout must be a positive number');
-        } else if (typeof timeoutCallback !== 'undefined' && typeof timeoutCallback !== 'function') {
-            throw new Error('Cache timeout callback must be a function');
-        }
-
-        let oldRecord = this.cache[key];
-        if (oldRecord) {
-            clearTimeout(oldRecord.timeout);
-        } else {
-            size++;
-        }
-        let record = {
-            value: value,
-            expire: time + Date.now()
-        };
-
-        if (!isNaN(record.expire)) {
-            record.timeout = setTimeout(function() {
-                _del(key);
-                if (timeoutCallback) {
-                    timeoutCallback(key, value);
+    _initCleaner() {
+        this.emitter = new EventEmitter();
+        this.emitter.on('clean', () => {
+            if (this.cleanId) {
+                clearImmediate(this.cleanId);
+            }
+            this.cleanId = setImmediate(() => {
+                let date = Date.now();
+                for (let k in this.cache) {
+                    if (this.cache[k].expire < date) {
+                        this.del(k);
+                    }
                 }
-            }, time);
+                this.cleanId = null;
+            });
+        });
+    }
+
+    put(key, value) {
+        let record = this.cache[key];
+        if (!record) {
+            this.size++;
         }
-        cache[key] = record;
-        return value;
+        record = {
+            value: value,
+            expire: Date.now() + CACHE_TIME,
+            hit: 0
+        };
+        this.cache[key] = record;
+        if (this.size() > CACHE_CLEAN_TRESHOLD) {
+            this.emitter.emit('clean');
+        }
     }
 
     del(key) {
-        let canDelete = true;
-        let oldRecord = cache[key];
-        if (oldRecord) {
-            clearTimeout(oldRecord.timeout);
-            if (!isNaN(oldRecord.expire) && oldRecord.expire < Date.now()) {
-                canDelete = false;
-            }
+        let record = this.cache[key];
+        if (record) {
+            this.size--;
+            delete this.cache[key];
+            return true;
         } else {
-            canDelete = false;
+            return false;
         }
-        if (canDelete) {
-            _del(key);
-        }
-        return canDelete;
-    }
-
-    _del(key) {
-        size--;
-        delete cache[key];
     }
 
     clear() {
-        for (let key in cache) {
-            clearTimeout(cache[key].timeout);
-        }
-        size = 0;
-        cache = Object.create(null);
-        if (debug) {
-            hitCount = 0;
-            missCount = 0;
-        }
+        clearImmediate(this.cleanId);
+        this.cleanId = null;
+        this.size = 0;
+        this.cache = Object.create(null);
+        this.hitCount = 0;
+        this.missCount = 0;
     }
 
     get(key) {
-        let data = cache[key];
-        if (typeof data !== 'undefined') {
-            if (isNaN(data.expire) || data.expire >= Date.now()) {
-                if (debug) hitCount++;
-                return data.value;
-            } else {
-                // free some space
-                if (debug) missCount++;
-                size--;
-                delete cache[key];
-            }
-        } else if (debug) {
-            missCount++;
+        let data = this.cache[key];
+        if (data) {
+            data.hit++;
+            data.expire = Date.now() + CACHE_TIME;
+            this.hitCount++;
+            //return a copy
+            let value = JSON.parse(JSON.stringify(data.value));
+            return value;
+        } else {
+            this.missCount++;
+            return null;
         }
-        return null;
     }
 
     keys() {

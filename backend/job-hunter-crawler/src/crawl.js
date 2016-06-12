@@ -1,5 +1,6 @@
-let rp = require('request-promise');
+const rp = require('request-promise');
 import * as utils from './utils';
+import Cache from './cache';
 
 export class Crawl {
 
@@ -7,6 +8,7 @@ export class Crawl {
         this.cookie = '';
         this.useragent = utils.getUserAgent();
         this.urls = utils.getSeedUrls();
+        this.cache = new Cache();
     }
 
     start() {
@@ -14,10 +16,5 @@ export class Crawl {
             this.useragent;
         });
         return p;
-    }
-
-    request(url) {
-
-        rp(url).then();
     }
 }
