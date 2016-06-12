@@ -8,12 +8,11 @@
     <artifactId>job-hunter</artifactId>
     <version>0.0.1</version>
     <name>job-hunter</name>
-    <description>Display programming jobs analysis with a job crawler</description>
+    <description>Display programming jobs analysis</description>
     <packaging>pom</packaging>
     
     <modules>
         <module>job-hunter-analyzer</module>
-        <module>job-hunter-crawler</module>
         <module>job-hunter-biz</module>
         <module>job-hunter-web</module>
         <module>job-hunter-parent</module>
