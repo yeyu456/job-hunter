@@ -11,6 +11,9 @@ export const CITIES = [
 export const JOB_TYPES = [
     'Java', 'Node.js', 'Javascript', 'gaoduanjishuzhiwei'
 ];
+Object.seal(USER_AGENTS);
+Object.seal(CITIES);
+Object.seal(JOB_TYPES);
 
 
 
@@ -25,6 +28,7 @@ export const ONE_DAY = 24 * 3600 * 1000; //1 day in millisecond
 export const MAX_REJECT_NUM = 3;
 
 
+
 //****************** EMAIL ******************//
 
 export const ENABLE_EMAIL = false;
@@ -32,7 +36,7 @@ export const ENABLE_EMAIL = false;
 export const EMAIL_OPTIONS = {
 
 };
-
+Object.seal(EMAIL_OPTIONS);
 
 
 //****************** LOG ******************//
@@ -46,6 +50,7 @@ export const LogType = {
     ERROR: 2,
     FATAL: 3
 };
+Object.seal(LogType);
 
 export const LOG_LEVEL = LogType.WARN; // 0:log 1:warn 2:error 3:fatal
 
@@ -55,4 +60,4 @@ export const LOG_LEVEL = LogType.WARN; // 0:log 1:warn 2:error 3:fatal
 
 export const CACHE_TIME = ONE_DAY;
 
-export const CACHE_CLEAN_TRESHOLD = 1000;
+export const CACHE_CLEAN_TRESHOLD = 5000;

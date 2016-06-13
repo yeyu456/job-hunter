@@ -1,5 +1,5 @@
 
-import * as utils from './utils';
+import * as utils from './support/utils';
 import {CHECK_INTERVAL, ONE_DAY, MAX_REJECT_NUM} from './config';
 import Logger from './log';
 
@@ -42,17 +42,22 @@ function task() {
     isRunning = true;
     let crawl = new Crawl();
     crawl.start().then(() => {
+        crawl.end();
         startTime = utils.getNextStartTime(startTime);
         isRunning = false;
         rejectNum = 0;
         task();
 
     }).catch((err) => {
+        crawl.end();
         rejectNum++;
         isRunning = false;
         if (rejectNum > MAX_REJECT_NUM) {
-            Logger.fatal('No more running.', err);
-            process.exit(1);
+            try {
+                Logger.fatal('No more running.', err);
+            } finally {
+                process.exit(1);
+            }
 
         } else {
             Logger.error(err);

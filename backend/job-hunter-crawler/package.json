@@ -5,11 +5,12 @@
     "author": "yeyu456 <yeyu456@gmail.com>",
     "license": "MIT",
     "dependencies": {
-        "request-promise" :"^3.0.0",
-        "cheerio":"^0.20.0",
-        "forever":"^0.15.2",
-        "urlencode":"^1.1.0",
-        "nodemailer":"^2.4.2"
+        "superagent": "^2.0.0",
+        "superagent-promise-plugin": "^3.2.0",
+        "cheerio": "^0.20.0",
+        "forever": "^0.15.2",
+        "urlencode": "^1.1.0",
+        "nodemailer": "^2.4.2"
     },
     "devDependencies": {
         "eslint":"^2.12.0",

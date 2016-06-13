@@ -1,4 +1,4 @@
-
+const Console = require('console').Console;
 const nodemailer = require('nodemailer');
 import {ENABLE_EMAIL, LOG_PATH, ERROR_PATH, LOG_LEVEL, LogType} from './config';
 
@@ -51,6 +51,14 @@ export default class Logger {
     }
 
     static getLog(...content) {
-        return '[' + (new Date()).toString() + ']' + content.join(' ');
+        let log = '[' + (new Date()).toString() + ']';
+        for (let c of content) {
+            if (Object.prototype.toString.call(c) === '[object Object]') {
+                log += ' ' + JSON.stringify(c);
+            } else {
+                log += ' ' + c.toString();
+            }
+        }
+        return log;
     }
 }

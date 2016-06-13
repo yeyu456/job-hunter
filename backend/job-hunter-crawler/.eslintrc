@@ -4,10 +4,8 @@
         "sourceType": "module"
     },
     "env": {
-        // Allow CommonJS writing
         "node": true,
 
-        // es2015
         "es6":true
     },
     "rules": {
