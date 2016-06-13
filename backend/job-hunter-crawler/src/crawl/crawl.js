@@ -1,9 +1,9 @@
 const urlencode = require('urlencode');
-import * as utils from './support/utils';
-import Client from './support/client';
-import {CITIES, JOB_TYPES} from './config';
-import Cache from './cache';
-import Logger from './log';
+import * as utils from './../support/utils';
+import Logger from './../support/log';
+import Client from './../support/client';
+import {CITIES, JOB_TYPES} from './../config';
+import Cache from './../db/cache';
 import Task from './task';
 
 export class Crawl {
@@ -91,7 +91,7 @@ export class Crawl {
             return;
         }
         for (let job of jobs) {
-            
+
         }
     }
 

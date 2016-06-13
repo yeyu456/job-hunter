@@ -1,5 +1,5 @@
 const EventEmitter = require('events');
-import {CACHE_TIME} from './config';
+import {CACHE_TIME} from './../config';
 
 export default class Cache {
 

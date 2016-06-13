@@ -1,7 +1,8 @@
 
 import * as utils from './support/utils';
+import Logger from './support/log';
+import Crawl from './crawl/crawl';
 import {CHECK_INTERVAL, ONE_DAY, MAX_REJECT_NUM} from './config';
-import Logger from './log';
 
 let isDebug = false;
 let startTime = undefined;

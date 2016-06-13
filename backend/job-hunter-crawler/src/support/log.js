@@ -1,6 +1,6 @@
 const Console = require('console').Console;
 const nodemailer = require('nodemailer');
-import {ENABLE_EMAIL, LOG_PATH, ERROR_PATH, LOG_LEVEL, LogType} from './config';
+import {ENABLE_EMAIL, LOG_PATH, ERROR_PATH, LOG_LEVEL, LogType} from './../config';
 
 const output = fs.createWriteStream(LOG_PATH);
 const errorOutput = fs.createWriteStream(ERROR_PATH);
