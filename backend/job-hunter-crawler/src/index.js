@@ -1,8 +1,7 @@
-
-import * as utils from './support/utils';
-import Logger from './support/log';
-import Crawl from './crawl/crawl';
-import {CHECK_INTERVAL, ONE_DAY, MAX_REJECT_NUM} from './config';
+const utils = require('./support/utils.js');
+const Logger = require('./support/log.js');
+const Crawl = require('./crawl/crawl.js');
+const Config = require('./config.js');
 
 let isDebug = false;
 let startTime = undefined;
@@ -26,7 +25,7 @@ function main() {
     if (!startTime) {
         startTime = utils.getStartTime();
         if (new Date().getTime() > startTime) {
-            startTime += ONE_DAY;
+            startTime += Config.ONE_DAY;
         }
     }
     task();
@@ -38,7 +37,7 @@ function task() {
         return;
     }
     if (new Date().getTime() < startTime) {
-        setTimeout(task, CHECK_INTERVAL);
+        setTimeout(task, Config.CHECK_INTERVAL);
     }
     isRunning = true;
     let crawl = new Crawl();
@@ -53,7 +52,7 @@ function task() {
         crawl.end();
         rejectNum++;
         isRunning = false;
-        if (rejectNum > MAX_REJECT_NUM) {
+        if (rejectNum > Config.MAX_REJECT_NUM) {
             try {
                 Logger.fatal('No more running.', err);
             } finally {

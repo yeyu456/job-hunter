@@ -1,4 +1,4 @@
-export default class Task {
+module.exports = class Task {
 
     constructor(url) {
         this._startPageNum = 1;
@@ -15,7 +15,7 @@ export default class Task {
     }
 
     get startPageNum() {
-        if (this.startPageNum > this._maxPageNum) {
+        if (this._startPageNum > this._maxPageNum) {
             return null;
         } else {
             let tmp = this._startPageNum;

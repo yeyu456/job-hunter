@@ -1,26 +1,24 @@
 const urlencode = require('urlencode');
-import * as utils from './../support/utils';
-import Logger from './../support/log';
-import Client from './../support/client';
-import {CITIES, JOB_TYPES} from './../config';
-import Cache from './../db/cache';
-import Task from './task';
+const utils = require('./../support/utils.js');
+const Logger = require('./../support/log.js');
+const Client = require('./../support/client.js');
+const Config = require('./../config.js');
+const Cache = require('./../db/cache.js');
+const Task = require('./task.js');
 
-export class Crawl {
+module.exports = class Crawl {
 
     constructor() {
         this.cookie = '';
         this.useragent = utils.getUserAgent();
         this.commpanyCache = new Cache();
         this.jobCache = new Cache();
-
-        this.client = new Client();
         this.seedTasks = [];
         this._initSeedTasks();
     }
 
     _initSeedTasks() {
-        for (let city of CITIES) {
+        for (let city of Config.CITIES) {
             let url = 'http://www.lagou.com/jobs/positionAjax.json?city='
                 + urlencode.encode(city, 'UTF-8') + '&needAddtionalResult=false';
             this.seedTasks.push(new Task(url));
@@ -28,15 +26,15 @@ export class Crawl {
     }
 
     start() {
-        this._seedTask();
-        this.client.done().then(() => {
-            this.jobId = setImmediate(() => {
-                this._jobTask();
-            });
-            this.companyId = setImmediate(() => {
-                this._companyTask();
-            });
-        });
+        return this._seedTask().done()
+        // .then(() => {
+        //     this.jobId = setImmediate(() => {
+        //         this._jobTask();
+        //     });
+        //     this.companyId = setImmediate(() => {
+        //         this._companyTask();
+        //     });
+        // });
     }
 
     end() {
@@ -49,19 +47,24 @@ export class Crawl {
         if (this.client) {
             this.client.clear();
         }
+        Logger.log('crawl end');
     }
 
     _seedTask() {
-        for (let job of JOB_TYPES) {
+        let client = new Client();
+        for (let job of Config.JOB_TYPES) {
             for (let task of this.seedTasks) {
-                let options = {
-                    body: {
-                        first: false,
-                        pn: task.startPageNum,
-                        kd: job
-                    }
-                }
-                this.client.post(task.url, options).then((res) => {
+                let pageNum = task.startPageNum;
+                let options = JSON.parse(Config.DEFAULT_HEADERS);
+                options['Accept'] = Config.ACCEPT_JSON;
+                options['User-Agent'] = this.useragent;
+                options['Referer'] = `http://www.lagou.com/zhaopin/${job}/?labelWords=label`
+                options.body = {
+                    first: false,
+                    pn: pageNum,
+                    kd: job
+                };
+                client.post(task.url, options).then((res) => {
                     let data = res.body;
                     if (data &&
                         data['content'] &&
@@ -73,17 +76,15 @@ export class Crawl {
                         let r = data.content.positionResult;
                         task.maxPageNum = utils.getMaxPageNum(r.totalCount, r.pageSize);
                         this._saveJobs(r.result);
-
-                    } else {
-                        Logger.fatal('!!!data struction changed!!!', data);
+                    }  else {
+                        Logger.fatal('[seedTask]!!!data structure changed!!!', data);
                     }
-
                 }).catch((err) => {
-                    //do something to makeup
-                    Logger.error('')
+                    Logger.error('[seedTask]' + err);
                 });
             }
         }
+        return client;
     }
 
     _saveJobs(jobs) {
@@ -91,7 +92,7 @@ export class Crawl {
             return;
         }
         for (let job of jobs) {
-
+            Logger.log(job, '\n');
         }
     }
 

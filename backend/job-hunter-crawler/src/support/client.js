@@ -1,7 +1,7 @@
 const requestPromise = require('superagent-promise-plugin');
-const request = superagentPromisePlugin.patch(require('superagent'));
+const request = requestPromise.patch(require('superagent'));
 
-export default class Client {
+module.exports = class Client {
 
     get(url, options = {}) {
         let p = request.get(url)

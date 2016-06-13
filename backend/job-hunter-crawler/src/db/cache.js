@@ -1,7 +1,7 @@
 const EventEmitter = require('events');
-import {CACHE_TIME} from './../config';
+const Config = require('./../config.js');
 
-export default class Cache {
+module.exports = class Cache {
 
     constructor() {
         this.cache = Object.create(null);
@@ -36,11 +36,11 @@ export default class Cache {
         }
         record = {
             value: value,
-            expire: Date.now() + CACHE_TIME,
+            expire: Date.now() + Config.CACHE_TIME,
             hit: 0
         };
         this.cache[key] = record;
-        if (this.size() > CACHE_CLEAN_TRESHOLD) {
+        if (this.size() > Config.CACHE_CLEAN_TRESHOLD) {
             this.emitter.emit('clean');
         }
     }
@@ -69,7 +69,7 @@ export default class Cache {
         let data = this.cache[key];
         if (data) {
             data.hit++;
-            data.expire = Date.now() + CACHE_TIME;
+            data.expire = Date.now() + Config.CACHE_TIME;
             this.hitCount++;
             //return a copy
             let value = JSON.parse(JSON.stringify(data.value));
