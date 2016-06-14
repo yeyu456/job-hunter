@@ -1,5 +1,5 @@
 const requestPromise = require('superagent-promise-plugin');
-const request = requestPromise.patch(require('superagent'));
+const request = require('request');
 
 module.exports = class Client {
 
@@ -10,12 +10,22 @@ module.exports = class Client {
         return this;
     }
 
-    post(url, data, options = {}) {
-        let p = request.post(url)
-            .send(data)
-            .set(options);
-        this._add(p);
-        return this;
+    post(url, options, ...data) {
+        let op = {
+            url: url
+        };
+        request.post(op, (error, response, body)=>{
+            if (!error && response.statusCode == 200) {
+                var info = JSON.parse(body);
+                console.log(info.stargazers_count + " Stars");
+                console.log(info.forks_count + " Forks");
+            } else {
+                console.log('error request\n');
+                console.error(error);
+            }
+        });
+        //this._add(p);
+        //return this;
     }
 
     _add(p){
@@ -38,12 +48,6 @@ module.exports = class Client {
     }
 
     done() {
-        let tmp = this.rlist;
-        this.clear();
-        return Promise.all(tmp);
-    }
-
-    clear() {
-        this.rlist = [];
+        return Promise.all(this.rlist);
     }
 }

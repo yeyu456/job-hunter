@@ -5,16 +5,14 @@
     "author": "yeyu456 <yeyu456@gmail.com>",
     "license": "MIT",
     "dependencies": {
-        "superagent": "^2.0.0",
-        "superagent-promise-plugin": "^3.2.0",
+        "request": "^2.72.0",
         "cheerio": "^0.20.0",
         "forever": "^0.15.2",
         "urlencode": "^1.1.0",
-        "nodemailer": "^2.4.2"
+        "nodemailer": "^2.4.2",
+        "mkdirp": "^0.5.1"
     },
     "devDependencies": {
-        "eslint":"^2.12.0",
-        "gulp":"^3.9.1",
-        "del":"^2.2.0"
+        "eslint":"^2.12.0"
     }
 }

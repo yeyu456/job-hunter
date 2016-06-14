@@ -27,6 +27,14 @@ const Config = {
         'Java', 'Node.js', 'Javascript', 'gaoduanjishuzhiwei'
     ],
 
+    CITY_URL : 'http://www.lagou.com/jobs/positionAjax.json?city=',
+
+    CITY_URL_POSTFIX : '&needAddtionalResult=false',
+
+    CITY_REF : 'http://www.lagou.com/zhaopin/',
+
+    CITY_REF_POSTFIX : '/?labelWords=label',
+
 
 
     //****************** TIME ******************//
@@ -34,6 +42,8 @@ const Config = {
     START_TIME : '05:00:00', //5:00 AM
 
     CHECK_INTERVAL : 5000, //5s
+
+    RETRY_INTERVAL : 60 * 1000, //1min
 
     ONE_DAY : 24 * 3600 * 1000, //1 day in millisecond
 

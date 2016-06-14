@@ -1,5 +1,7 @@
 const nodemailer = require('nodemailer');
 const fs = require('fs');
+const path = require('path');
+const mkdirp = require('mkdirp');
 const Config = require('./../config.js');
 
 module.exports = class Logger {
@@ -8,13 +10,9 @@ module.exports = class Logger {
         if (Config.LOG_LEVEL > Config.LogType.LOG) {
             return;
         }
-        let str = Logger.getLog(content);
+        let str = Logger.getLog('[LOG]', content);
+        Logger.record(Config.LOG_PATH, str);
         console.log(str);
-        fs.appendFileSync(Config.LOG_PATH, '[LOG]' + str, (err) => {
-            if (err) {
-                throw err;
-            }
-        });
         if (Config.ENABLE_EMAIL) {
             //TODO send email
         }
@@ -24,13 +22,9 @@ module.exports = class Logger {
         if (Config.LOG_LEVEL > Config.LogType.WARN) {
             return;
         }
-        let str = Logger.getLog(content);
+        let str = Logger.getLog('[WARN]', content);
+        Logger.record(Config.LOG_PATH, str);
         console.log(str);
-        fs.appendFileSync(Config.LOG_PATH, '[WARN]' + str, (err) => {
-            if (err) {
-                throw err;
-            }
-        });
         if (Config.ENABLE_EMAIL) {
             //TODO send email
         }
@@ -40,34 +34,26 @@ module.exports = class Logger {
         if (Config.LOG_LEVEL > Config.LogType.ERROR) {
             return;
         }
-        let str = Logger.getLog(content);
+        let str = Logger.getLog('[ERROR]', content);
+        Logger.record(Config.ERROR_PATH, str);
         console.log(str);
-        fs.appendFileSync(Config.ERROR_PATH, '[ERROR]' + str, (err) => {
-            if (err) {
-                throw err;
-            }
-        });
         if (Config.ENABLE_EMAIL) {
             //TODO send email
         }
     }
 
     static fatal(...content) {
-        let str = '[FATAL]' + Logger.getLog(content);
+        let str = Logger.getLog('[FATAL]', content);
+        Logger.record(Config.ERROR_PATH, str);
         console.log(str);
-        fs.appendFileSync(Config.ERROR_PATH, str, (err) => {
-            if (err) {
-                throw err;
-            }
-        });
         if (Config.ENABLE_EMAIL) {
             //TODO send email
         }
-        logger.assert(false, str);
+        //process.exit(2);
     }
 
-    static getLog(...content) {
-        let log = '[' + (new Date()).toString() + ']';
+    static getLog(logLv, ...content) {
+        let log = logLv + '[' + (new Date()).toString() + ']';
         for (let c of content) {
             if (Object.prototype.toString.call(c) === '[object Object]') {
                 log += ' ' + JSON.stringify(c);
@@ -76,5 +62,35 @@ module.exports = class Logger {
             }
         }
         return log;
+    }
+
+    static record(logPath, content) {
+        return;
+        // if (!logPath || logPath === '') {
+        //     throw new Error('Illegal log path ' + logPath);
+        // }
+        // fs.access(logPath, fs.F_OK | fs.W_OK, (err) => {
+        //     if (err) {
+        //         if (err.code === 'ENOENT') {
+        //             let dir = path.dirname(logPath);
+        //             if (dir === '.') {
+        //                 fs.appendFileSync(logPath, content);
+        //
+        //             } else {
+        //                 mkdirp(dir, function (err) {
+        //                     if (err) {
+        //                         throw new Error(JSON.stringify(err));
+        //                     } else {
+        //                         fs.appendFileSync(logPath, content);
+        //                     }
+        //                 });
+        //             }
+        //         } else {
+        //             throw new Error(JSON.stringify(err));
+        //         }
+        //     } else {
+        //         fs.appendFileSync(logPath, content);
+        //     }
+        // });
     }
 }

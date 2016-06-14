@@ -46,10 +46,12 @@ function task() {
         startTime = utils.getNextStartTime(startTime);
         isRunning = false;
         rejectNum = 0;
-        task();
+        crawl.end();
+        return;
 
     }).catch((err) => {
         crawl.end();
+        return;
         rejectNum++;
         isRunning = false;
         if (rejectNum > Config.MAX_REJECT_NUM) {
@@ -62,6 +64,7 @@ function task() {
         } else {
             Logger.error(err);
             isRunning = false;
+            setTimeout(task, Config.RETRY_INTERVAL * rejectNum);
             task();
         }
     });
