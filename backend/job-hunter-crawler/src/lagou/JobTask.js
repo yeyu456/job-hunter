@@ -1,7 +1,6 @@
+const BaseTask = require('./BaseTask.js');
 
-const Task = require('./task.js');
-
-module.exports = class JobTask extends Task {
+module.exports = class JobTask extends BaseTask {
 
     get city() {
         return this._city;

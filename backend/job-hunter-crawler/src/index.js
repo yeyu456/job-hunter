@@ -1,6 +1,6 @@
-const utils = require('./support/utils.js');
-const Logger = require('./support/log.js');
-const Crawl = require('./crawl/crawl.js');
+const Utils = require('./support/Utils.js');
+const Logger = require('./support/Log.js');
+const Crawl = require('./lagou/Crawl.js');
 const Config = require('./config.js');
 
 let isDebug = false;
@@ -23,11 +23,13 @@ function main() {
         startTime = new Date();
     }
     if (!startTime) {
-        startTime = utils.getStartTime();
+        startTime = Utils.getStartTime();
         if (new Date().getTime() > startTime) {
             startTime += Config.ONE_DAY;
         }
     }
+    console.log('startTime');
+    console.log(startTime);
     task();
 }
 
@@ -35,15 +37,16 @@ function task() {
     //In case of multiple task running at the same time
     if (isRunning) {
         return;
-    }
-    if (new Date().getTime() < startTime) {
+    } else if (new Date().getTime() < startTime) {
+        console.log('not in time');
         setTimeout(task, Config.CHECK_INTERVAL);
+        return;
     }
     isRunning = true;
     let crawl = new Crawl();
     crawl.start().then(() => {
         crawl.end();
-        startTime = utils.getNextStartTime(startTime);
+        startTime = Utils.getNextStartTime(startTime);
         isRunning = false;
         rejectNum = 0;
         crawl.end();

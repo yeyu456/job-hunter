@@ -1,53 +1,51 @@
-const requestPromise = require('superagent-promise-plugin');
 const request = require('request');
 
 module.exports = class Client {
 
-    get(url, options = {}) {
-        let p = request.get(url)
-            .set(options);
-        this._add(p);
-        return this;
-    }
-
-    post(url, options, ...data) {
+    static get(url, headers, agent = null) {
         let op = {
-            url: url
+            url: url,
+            headers: headers
         };
-        request.post(op, (error, response, body)=>{
-            if (!error && response.statusCode == 200) {
-                var info = JSON.parse(body);
-                console.log(info.stargazers_count + " Stars");
-                console.log(info.forks_count + " Forks");
-            } else {
-                console.log('error request\n');
-                console.error(error);
-            }
-        });
-        //this._add(p);
-        //return this;
-    }
-
-    _add(p){
-        if (!this.rlist) {
-            this.rlist = [];
+        //http agent
+        if (agent) {
+            op.agent = agent;
         }
-        this.rlist.push(p);
+        //disable cache
+        op.headers['Pragma'] = 'no-cache';
+        return new Promise((resolve, reject) => {
+            request.get(op, (error, res, body) => {
+                if (!error && res.statusCode === 200) {
+                    resolve(body);
+
+                } else {
+                    reject(error ||
+                        new Error('Response status code:' + res.statusCode));
+                }
+            });
+        });
     }
 
-    then(callback) {
-        let p = this.rlist.pop();
-        this.rlist.push(p.then(callback));
-        return this;
-    }
+    static post(url, headers, data, agent = null) {
+        let op = {
+            url: url,
+            headers: headers,
+            form: data
+        };
+        //http agent
+        if (agent) {
+            op.agent = agent;
+        }
+        return new Promise((resolve, reject)=>{
+            request.post(op, (error, res, body)=>{
+                if (!error && res.statusCode === 200) {
+                    resolve(JSON.parse(body));
 
-    catch(callback) {
-        let p = this.rlist.pop();
-        this.rlist.push(p.catch(callback));
-        return this;
-    }
-
-    done() {
-        return Promise.all(this.rlist);
+                } else {
+                    reject(error ||
+                        new Error('Response status code:' + res.statusCode));
+                }
+            });
+        });
     }
 }

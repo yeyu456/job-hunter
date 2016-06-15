@@ -1,5 +1,3 @@
-
-
 const Config = {
 
     //****************** CRAWL ******************//
@@ -7,7 +5,7 @@ const Config = {
     USER_AGENTS : [
         'Mozilla/5.0 (Windows NT 6.3, Win64, x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.33 Safari/537.36'],
 
-    DEFAULT_HEADERS : JSON.stringify({
+    DEFAULT_LAGOU_POST_HEADERS : JSON.stringify({
         'Accept-Encoding': 'gzip, deflate',
         'Accept-Language': 'zh-CN,zh,q:0.8,en,q:0.6,ja,q:0.4,ko,q:0.2,zh-TW,q:0.2',
         'Content-Type': 'application/x-www-form-urlencoded, charset:UTF-8',
@@ -27,7 +25,7 @@ const Config = {
         'Java', 'Node.js', 'Javascript', 'gaoduanjishuzhiwei'
     ],
 
-    CITY_URL : 'http://www.lagou.com/jobs/positionAjax.json?city=',
+    CITY_URL : 'http://www.lagou.com/jobs/positionAjax.json?px=new&city=',
 
     CITY_URL_POSTFIX : '&needAddtionalResult=false',
 
@@ -49,6 +47,7 @@ const Config = {
 
     MAX_REJECT_NUM : 3,
 
+    TASK_INTERVAL : 1 * 1000, //1s
 
 
     //****************** EMAIL ******************//
@@ -73,7 +72,7 @@ const Config = {
         FATAL: 3
     },
 
-    LOG_LEVEL : 1, // 0:log 1:warn 2:error 3:fatal
+    LOG_LEVEL : 0, // 0:log 1:warn 2:error 3:fatal
 
 
 
