@@ -45,14 +45,12 @@ function task() {
     isRunning = true;
     let crawl = new Crawl();
     crawl.start().then(() => {
-        crawl.end();
         startTime = Utils.getNextStartTime(startTime);
         isRunning = false;
         rejectNum = 0;
-        crawl.end();
-        return;
 
     }).catch((err) => {
+        console.log(err);
         crawl.end();
         return;
         rejectNum++;

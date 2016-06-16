@@ -22,6 +22,7 @@ module.exports = class BaseTask {
     get startPageNum() {
         if (this._startPageNum > this._maxPageNum) {
             return null;
+            
         } else {
             let tmp = this._startPageNum;
             this._startPageNum++;
