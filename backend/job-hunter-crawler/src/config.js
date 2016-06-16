@@ -5,6 +5,15 @@ const Config = {
     USER_AGENTS : [
         'Mozilla/5.0 (Windows NT 6.3, Win64, x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.33 Safari/537.36'],
 
+    MOBILE_USER_AGENTS : [
+        'Mozilla/5.0 (Linux; Android 5.1.1; Nexus 5 Build/LMY48B; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/43.0.2357.65 Mobile Safari/537.36',
+        'Mozilla/5.0 (Linux; Android 4.4; Nexus 5 Build/_BuildID_) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/30.0.0.0 Mobile Safari/537.36',
+        'Mozilla/5.0 (Linux; U; Android 4.1.1; zh-cn; Build/KLP) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Safari/534.30',
+        'Mozilla/5.0 (Linux; U; Android 4.0.3; zh-cn; LG-L160L Build/IML74K) AppleWebkit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30',
+        'Mozilla/5.0 (Linux; U; Android 4.2.2; zh-cn; NX403A Build/JDQ39) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30',
+        'Mozilla/5.0 (Linux; Android 4.4.2; Nexus 4 Build/KOT49H) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.59 Mobile Safari/537.36'
+    ],
+
     DEFAULT_LAGOU_POST_HEADERS : JSON.stringify({
         'Accept-Language': 'zh-CN,zh,q:0.8,en,q:0.6,ja,q:0.4,ko,q:0.2,zh-TW,q:0.2',
         'Content-Type': 'application/x-www-form-urlencoded, charset:UTF-8',
@@ -13,15 +22,22 @@ const Config = {
         'X-Requested-With': 'XMLHttpRequest'
     }),
 
+    MOBILE_LAGOU_GET_HEADERS : JSON.stringify({
+        'Accept-Language' : 'zh-CN,zh;q=0.8,en;q=0.6,ja;q=0.4,ko;q=0.2',
+        'Accept' : 'application/json',
+        'Host': 'www.lagou.com',
+        'X-Requested-With' : 'XMLHttpRequest'
+    }),
+
     ACCEPT_JSON : 'application/json',
 
     CITIES : [
-        '上海'//, '深圳', '广州', '北京', '杭州'
+        '上海', '深圳', '广州', '北京', '杭州'
     ],
 
     //高端技术职位:gaoduanjishuzhiwei
     JOB_TYPES : [
-        'Java'//, 'Node.js', 'Javascript', 'gaoduanjishuzhiwei'
+        'Java', 'Node.js', 'Javascript', 'gaoduanjishuzhiwei'
     ],
 
     CITY_URL : 'http://www.lagou.com/jobs/positionAjax.json?px=new&city=',
@@ -32,11 +48,17 @@ const Config = {
 
     CITY_REF_POSTFIX : '/?labelWords=label',
 
+    MOBILE_CITY_URL : 'http://www.lagou.com/custom/search.json?city=',
+
+    MOBILE_CITY_URL_POSTFIX : '&positionName=',
+
+    MOBILE_CITY_REF : 'http://www.lagou.com/custom/search.html?m=1',
+
 
 
     //****************** TASK ******************//
 
-    CONCURRENT_TASK_NUM : 1,
+    CONCURRENT_TASK_NUM : 5,
 
     TASK_INTERVAL : 1 * 1000, //1s
 
@@ -86,7 +108,24 @@ const Config = {
 
     CACHE_TIME : this.ONE_DAY,
 
-    CACHE_CLEAN_TRESHOLD : 5000
+    CACHE_CLEAN_TRESHOLD : 5000,
+
+
+
+    //****************** DB ******************//
+
+    DATABASE_HOST : '127.0.0.1',
+
+    DATABASE_PORT : '27017',
+
+    DATABASE_USERNAME : '',
+
+    DATABASE_PASSWORD : '',
+
+    DATABASE_OPTIONS : {
+        
+    },
+
 };
 Object.seal(Config),
 

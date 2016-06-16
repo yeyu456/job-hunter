@@ -2,7 +2,7 @@ const urlencode = require('urlencode');
 const Config = require('./../config.js');
 
 function getUserAgent() {
-    return Config.USER_AGENTS[getRandomInt(0, Config.USER_AGENTS.length)];
+    return Config.MOBILE_USER_AGENTS[0];
 }
 
 function getStartTime(date = new Date()) {

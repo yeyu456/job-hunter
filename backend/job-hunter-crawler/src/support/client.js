@@ -5,6 +5,7 @@ module.exports = class Client {
 
     static get(url, headers, agent = null) {
         let op = {
+            proxy: 'http://112.65.200.211',
             url: url,
             headers: headers
         };
@@ -30,7 +31,7 @@ module.exports = class Client {
 
     static post(url, headers, data, agent = null) {
         let op = {
-            //proxy: 'http://112.65.200.211',
+            proxy: 'http://112.65.200.211',
             url: url,
             headers: headers,
             form: data

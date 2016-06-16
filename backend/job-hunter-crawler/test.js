@@ -4,9 +4,9 @@ const request = require('request');
 let count = 0;
 function test(){
     let options = {
-        //url: 'http://www.lagou.com/jobs/positionAjax.json?city=%E4%B8%8A%E6%B5%B7&needAddtionalResult=false',
+        url: 'http://www.lagou.com/jobs/positionAjax.json?city=%E4%B8%8A%E6%B5%B7&needAddtionalResult=false',
         proxy: 'http://112.65.200.211',
-        url: 'http://www.bing.com',
+        //url: 'http://www.bing.com',
         headers: {
             //'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
@@ -25,7 +25,7 @@ function test(){
         }
     })
 }
-test()
+//test()
 // let p1 = new Promise((r1, j1) => {
 //     r1();
 // });
@@ -59,3 +59,20 @@ test()
 //     }, 1000);
 // }
 // t2();
+// 
+// let webdriver = require('selenium-webdriver');
+// let proxy = require('selenium-webdriver/proxy');
+//
+// let cap = webdriver.Capabilities.chrome().set(
+//     'chromeOptions', {
+//         prefs : {
+//             'profile.managed_default_content_settings.images':2
+//         }
+//     });
+// let driver = new webdriver.Builder()
+//          .withCapabilities(cap)
+//          .setProxy(proxy.manual({http: '112.65.200.211'}))
+//          .build();
+// driver.get('http://www.lagou.com/gongsi/3-0-0').then(()=>{
+//     driver.post('http://www.lagou.com/gongsi/3-0-0.json')
+// });
