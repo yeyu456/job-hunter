@@ -54,6 +54,12 @@ const Config = {
 
     MOBILE_CITY_REF : 'http://www.lagou.com/custom/search.html?m=1',
 
+    MOBILE_COMPANY_URL : '',
+
+    MOBILE_COMPANY_URL_POSTFIX : '',
+
+    MOBILE_COMPANY_REF : '',
+
 
 
     //****************** TASK ******************//
@@ -66,7 +72,7 @@ const Config = {
 
     //****************** TIME ******************//
 
-    START_TIME : '05:00:00', //5:00 AM
+    START_TIME : '17:00:00', //5:00 PM
 
     CHECK_INTERVAL : 5000, //5s
 
@@ -123,7 +129,7 @@ const Config = {
     DATABASE_PASSWORD : '',
 
     DATABASE_OPTIONS : {
-        
+
     },
 
 };
