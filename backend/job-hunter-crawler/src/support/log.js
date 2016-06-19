@@ -53,6 +53,7 @@ module.exports = class Logger {
     }
 
     static getLog(logLv, ...content) {
+        return content;
         let log = logLv + '[' + (new Date()).toString() + ']';
         for (let c of content) {
             if (Object.prototype.toString.call(c) === '[object Object]') {

@@ -3,7 +3,7 @@ const Config = {
     //****************** CRAWL ******************//
 
     USER_AGENTS : [
-        'Mozilla/5.0 (Windows NT 6.3, Win64, x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.33 Safari/537.36'],
+        'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.84 Safari/537.36'],
 
     MOBILE_USER_AGENTS : [
         'Mozilla/5.0 (Linux; Android 5.1.1; Nexus 5 Build/LMY48B; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/43.0.2357.65 Mobile Safari/537.36',
@@ -15,9 +15,13 @@ const Config = {
     ],
 
     DEFAULT_LAGOU_POST_HEADERS : JSON.stringify({
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+        'Accept-Encoding': 'gzip, deflate',
         'Accept-Language': 'zh-CN,zh,q:0.8,en,q:0.6,ja,q:0.4,ko,q:0.2,zh-TW,q:0.2',
-        'Content-Type': 'application/x-www-form-urlencoded, charset:UTF-8',
-        'Host': 'www.lagou.com',
+        'Cache-Control': 'no-cache',
+        'X-Anit-Forge-Code': 0,
+        'X-Anit-Forge-Token': 'None',
+        'Content-Type': 'application/x-www-form-urlencoded',
         'Origin': 'http://www.lagou.com',
         'X-Requested-With': 'XMLHttpRequest'
     }),
@@ -25,7 +29,6 @@ const Config = {
     MOBILE_LAGOU_GET_HEADERS : JSON.stringify({
         'Accept-Language' : 'zh-CN,zh;q=0.8,en;q=0.6,ja;q=0.4,ko;q=0.2',
         'Accept' : 'application/json',
-        'Host': 'www.lagou.com',
         'X-Requested-With' : 'XMLHttpRequest'
     }),
 
@@ -40,7 +43,7 @@ const Config = {
         'Java', 'Node.js', 'Javascript', 'gaoduanjishuzhiwei'
     ],
 
-    CITY_URL : 'http://www.lagou.com/jobs/positionAjax.json?px=new&city=',
+    CITY_URL : 'http://www.lagou.com/jobs/positionAjax.json?city=',
 
     CITY_URL_POSTFIX : '&needAddtionalResult=false',
 
@@ -64,9 +67,9 @@ const Config = {
 
     //****************** TASK ******************//
 
-    CONCURRENT_TASK_NUM : 5,
+    CONCURRENT_TASK_NUM : 1,
 
-    TASK_INTERVAL : 1 * 1000, //1s
+    TASK_INTERVAL : 2 * 1000, //1s
 
 
 

@@ -2,7 +2,7 @@ const urlencode = require('urlencode');
 const Config = require('./../config.js');
 
 function getUserAgent() {
-    return Config.MOBILE_USER_AGENTS[0];
+    return Config.USER_AGENTS[0];
 }
 
 function getStartTime(date = new Date()) {
@@ -28,7 +28,7 @@ function getRandomInt(from, to) {
     if (to < from) {
         throw new Error('Illegal args with from ' + from + ' to ' + to);
     }
-    return Math.floor((to - from) * Math.random());
+    return Math.floor(Math.random() * (to - from)) + from;
 }
 
 module.exports = {
