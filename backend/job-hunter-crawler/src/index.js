@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 const Utils = require('./support/Utils.js');
 const Logger = require('./support/Log.js');
 const Crawl = require('./lagou/Crawl.js');
@@ -30,7 +32,28 @@ function main() {
     }
     console.log('startTime');
     console.log(startTime);
-    task();
+    connectDB().then(() => {
+        task();
+    });
+}
+
+function connectDB() {
+    let url = 'mongodb://';
+    if (Config.DATABASE_USERNAME &&
+        DATABASE_USERNAME !== '' &&
+        Config.DATABASE_PASSWORD &&
+        Config.DATABASE_PASSWORD !==  '') {
+        url += Config.DATABASE_USERNAME + ':' + Config.DATABASE_PASSWORD + '@';
+    }
+    url += Config.DATABASE_HOST;
+    if (Config.DATABASE_PORT && Config.DATABASE_PORT !== '') {
+        url += ':' + Config.DATABASE_PORT;
+    }
+    url += '/' + Config.DATABASE_NAME;
+    return mongoose.connect(url, Config.DATABASE_OPTIONS).catch((error) => {
+        Logger.fatal(error);
+        process.exit(1);
+    });
 }
 
 function task() {
@@ -56,17 +79,13 @@ function task() {
         rejectNum++;
         isRunning = false;
         if (rejectNum > Config.MAX_REJECT_NUM) {
-            try {
-                Logger.fatal('No more running.', err);
-            } finally {
-                process.exit(1);
-            }
+            Logger.fatal('No more running.', err);
+            process.exit(1);
 
         } else {
             Logger.error(err);
             isRunning = false;
             setTimeout(task, Config.RETRY_INTERVAL * rejectNum);
-            task();
         }
     });
 }

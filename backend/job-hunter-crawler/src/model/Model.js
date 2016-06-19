@@ -1,36 +1,68 @@
 const mongoose = require('mongoose');
 
 const CompanySchema = new mongoose.Schema({
-    id : Number,
-    name : String
+    id : {
+        type : Number,
+        min : 1,
+        required : true
+    },
+    name : {
+        type : String,
+        required : true
+    }
 });
 
 const LocationSchema = new mongoose.Schema({
-    city : String,
-    dist : String,
-    zone : String
+    city : {
+        type : String,
+        required : true
+    },
+    dist : {
+        type : String,
+        required : true
+    },
+    zone : {
+        type : String,
+        required : true
+    }
 });
 
 const JobSchema = new mongoose.Schema({
     id : {
         type : Number,
         min : 1,
-        required: true
+        required : true
     },
     company : {
         type : [CompanySchema],
-        required: true
+        required : true
     },
-    name : String,
-    salary : String,
-    education : String,
-    year : String,
-    createTime : Number,
+    name : {
+        type : String,
+        required : true
+    },
+    salary : {
+        type : String,
+        required : true
+    },
+    education : {
+        type : String,
+        required : true
+    },
+    year : {
+        type : String,
+        required : true
+    },
+    createTime : {
+        type : Number,
+        min : 1,
+        required : true
+    },
     content : String,
     contentkey : Array,
     location : {
         type : [LocationSchema],
-        required: true
+        required : true
     }
 });
 
@@ -60,4 +92,11 @@ const TaskSchema = new mongoose.Schema({
 let CompanyModel = mongoose.model('CompanyModel', CompanySchema);
 let LocationModel = mongoose.model('LocationModel', LocationSchema);
 let JobModel = mongoose.model('JobModel', JobSchema);
-let TaskSchema =
+let TaskModel = mongoose.model('TaskModel', TaskSchema);
+
+module.exports = {
+    CompanyModel: CompanyModel,
+    LocationModel: LocationModel,
+    JobModel: JobModel,
+    TaskModel: TaskModel
+}

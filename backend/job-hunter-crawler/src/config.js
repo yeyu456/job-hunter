@@ -127,6 +127,8 @@ const Config = {
 
     DATABASE_PORT : '27017',
 
+    DATABASE_NAME : 'Lagou',
+
     DATABASE_USERNAME : '',
 
     DATABASE_PASSWORD : '',
