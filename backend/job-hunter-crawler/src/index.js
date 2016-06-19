@@ -1,4 +1,8 @@
+const fs = require('fs');
+const path = require('path');
+
 const mongoose = require('mongoose');
+const TaskModel = require('./model/TaskModel.js');
 
 const Utils = require('./support/Utils.js');
 const Logger = require('./support/Log.js');
@@ -33,11 +37,40 @@ function main() {
     console.log('startTime');
     console.log(startTime);
     connectDB().then(() => {
-        task();
+        TaskModel.create({
+            job : Config.JOB_TYPES[1],
+            location : {
+                city : Config.CITIES[0],
+                dist : 'testdist',
+                zone : 'testzone'
+            },
+            startNum : 1,
+            maxNum : 1
+        }, function _cb(err, value) {
+            if (err) {
+                console.log(err);
+            } else {
+                console.log('saved');
+                value.save(function(err, value) {
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        console.log(value);
+                    }
+                })
+            }
+        });
     });
 }
 
 function connectDB() {
+    // let dir = path.join(__dirname, 'model');
+    // let models = fs.readdirSync(dir);
+    // for (let model of models) {
+    //     require(path.join(dir, model));
+    // }
+    //use native Promise
+    mongoose.Promise = global.Promise;
     let url = 'mongodb://';
     if (Config.DATABASE_USERNAME &&
         DATABASE_USERNAME !== '' &&
@@ -50,8 +83,10 @@ function connectDB() {
         url += ':' + Config.DATABASE_PORT;
     }
     url += '/' + Config.DATABASE_NAME;
+    console.log(url);
+
     return mongoose.connect(url, Config.DATABASE_OPTIONS).catch((error) => {
-        Logger.fatal(error);
+        Logger.error(error);
         process.exit(1);
     });
 }
