@@ -1,6 +1,13 @@
 const mongoose = require('mongoose');
 
-const LocationSchema = new mongoose.Schema({
+const Logger = require('./../support/log.js');
+const SCHEMA_OPTIONS = require('./../config.js').SCHEMA_OPTIONS;
+
+const TaskSchema = new mongoose.Schema({
+    job: {
+        type: String,
+        required: true
+    },
     city: {
         type: String,
         required: true
@@ -11,17 +18,6 @@ const LocationSchema = new mongoose.Schema({
     },
     zone: {
         type: String,
-        required: true
-    }
-});
-
-const TaskSchema = new mongoose.Schema({
-    job: {
-        type: String,
-        required: true
-    },
-    location: {
-        type: [LocationSchema],
         required: true
     },
     startNum: {
@@ -37,8 +33,9 @@ const TaskSchema = new mongoose.Schema({
         type: Date,
         required: true
     }
-});
-TaskSchema.index({job : 1, location : 1}, {unique : true});
+}, SCHEMA_OPTIONS);
+
+TaskSchema.index({job: 1, city: 1, dist: 1, zone: 1}, {unique: true, sparse: true});
 TaskSchema.pre('validate', function(next) {
     this.updated = Date.now();
     if (this.maxNum < this.startNum) {
@@ -49,10 +46,8 @@ TaskSchema.pre('validate', function(next) {
 });
 
 let TaskModel = mongoose.model('TaskModel', TaskSchema);
-TaskModel.on('index', function (error) {
-    console.log('on indexing');
+TaskModel.on('error', function (error) {
     if (error) {
-        console.log(error);
+        Logger.error(error);
     }
 });
-module.exports = TaskModel;

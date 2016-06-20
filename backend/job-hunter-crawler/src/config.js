@@ -143,6 +143,10 @@ const Config = {
         }
     },
 
+    SCHEMA_OPTIONS: {
+        emitIndexErrors: true
+    }
+
 };
 Object.seal(Config),
 

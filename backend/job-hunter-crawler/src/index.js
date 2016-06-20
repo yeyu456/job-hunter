@@ -2,7 +2,6 @@ const fs = require('fs');
 const path = require('path');
 
 const mongoose = require('mongoose');
-const TaskModel = require('./model/TaskModel.js');
 
 const Utils = require('./support/Utils.js');
 const Logger = require('./support/Log.js');
@@ -15,7 +14,6 @@ let isRunning = false;
 let rejectNum = 0;
 
 function main() {
-
     if (process.argv.length > 2) {
         let args = [];
         for (let i = 2; i < process.argv.length; i++) {
@@ -37,40 +35,26 @@ function main() {
     console.log('startTime');
     console.log(startTime);
     connectDB().then(() => {
-        TaskModel.create({
-            job : Config.JOB_TYPES[1],
-            location : {
-                city : Config.CITIES[0],
-                dist : 'testdist',
-                zone : 'testzone'
-            },
-            startNum : 1,
-            maxNum : 1
-        }, function _cb(err, value) {
-            if (err) {
-                console.log(err);
-            } else {
-                console.log('saved');
-                value.save(function(err, value) {
-                    if (err) {
-                        console.log(err);
-                    } else {
-                        console.log(value);
-                    }
-                })
-            }
-        });
+        task();
+        
+    }).catch((error) => {
+        Logger.error(error);
+        throw error;
     });
 }
 
 function connectDB() {
-    // let dir = path.join(__dirname, 'model');
-    // let models = fs.readdirSync(dir);
-    // for (let model of models) {
-    //     require(path.join(dir, model));
-    // }
+    //regist all models
+    let dir = path.join(__dirname, 'model');
+    let models = fs.readdirSync(dir);
+    for (let model of models) {
+        require(path.join(dir, model));
+    }
+
     //use native Promise
     mongoose.Promise = global.Promise;
+
+    //get db url
     let url = 'mongodb://';
     if (Config.DATABASE_USERNAME &&
         DATABASE_USERNAME !== '' &&
@@ -83,12 +67,9 @@ function connectDB() {
         url += ':' + Config.DATABASE_PORT;
     }
     url += '/' + Config.DATABASE_NAME;
-    console.log(url);
 
-    return mongoose.connect(url, Config.DATABASE_OPTIONS).catch((error) => {
-        Logger.error(error);
-        process.exit(1);
-    });
+    //do connect
+    return mongoose.connect(url, Config.DATABASE_OPTIONS);
 }
 
 function task() {
