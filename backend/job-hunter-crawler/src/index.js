@@ -36,7 +36,7 @@ function main() {
     console.log(startTime);
     connectDB().then(() => {
         task();
-        
+
     }).catch((error) => {
         Logger.error(error);
         throw error;
@@ -82,6 +82,13 @@ function task() {
         return;
     }
     isRunning = true;
+    
+}
+
+function initTask() {
+}
+
+function startCrawl() {
     let crawl = new Crawl();
     crawl.start().then(() => {
         startTime = Utils.getNextStartTime(startTime);

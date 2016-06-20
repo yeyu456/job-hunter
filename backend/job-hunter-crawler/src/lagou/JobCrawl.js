@@ -5,6 +5,7 @@ const childProcess = require('child_process');
 const phantomjs = require('phantomjs-prebuilt');
 const urlencode = require('urlencode');
 const ws = require('ws');
+const mongoose = require('mongoose');
 
 const Utils = require('./../support/Utils.js');
 const Logger = require('./../support/Log.js');
@@ -201,7 +202,7 @@ module.exports = class JobCrawl {
             return;
         }
         for (let job of jobs) {
-            Logger.log(job);
+            
         }
     }
 }

@@ -36,6 +36,7 @@ const TaskSchema = new mongoose.Schema({
 }, SCHEMA_OPTIONS);
 
 TaskSchema.index({job: 1, city: 1, dist: 1, zone: 1}, {unique: true, sparse: true});
+
 TaskSchema.pre('validate', function(next) {
     this.updated = Date.now();
     if (this.maxNum < this.startNum) {
@@ -44,6 +45,14 @@ TaskSchema.pre('validate', function(next) {
         next();
     }
 });
+
+TaskSchema.statics.getAll = function() {
+    return this.find({
+        job: {$ne: null},
+        city: {$ne: null},
+        dist: {$ne: null},
+        zone: {$ne: null}});
+};
 
 let TaskModel = mongoose.model('TaskModel', TaskSchema);
 TaskModel.on('error', function (error) {
