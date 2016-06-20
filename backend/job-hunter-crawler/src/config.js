@@ -26,6 +26,13 @@ const Config = {
         'X-Requested-With': 'XMLHttpRequest'
     }),
 
+    DEFAULT_LAGOU_GET_HEADERS: JSON.stringify({
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Encoding': 'gzip, deflate, sdch',
+        'Accept-Language': 'zh-CN,zh;q=0.8,en;q=0.6,ja;q=0.4,ko;q=0.2,zh-TW;q=0.2',
+        'Cache-Control': 'no-cache'
+    }),
+
     MOBILE_LAGOU_GET_HEADERS: JSON.stringify({
         'Accept-Language': 'zh-CN,zh;q=0.8,en;q=0.6,ja;q=0.4,ko;q=0.2',
         'Accept': 'application/json',
@@ -35,7 +42,7 @@ const Config = {
     ACCEPT_JSON: 'application/json',
 
     CITIES: [
-        '上海', '深圳', '广州', '北京', '杭州'
+        '上海'//, '深圳', '广州', '北京', '杭州'
     ],
 
     //高端技术职位:gaoduanjishuzhiwei
@@ -50,6 +57,12 @@ const Config = {
     CITY_REF: 'http://www.lagou.com/zhaopin/',
 
     CITY_REF_POSTFIX: '/?labelWords=label',
+
+    CITY_GET_URL: 'http://www.lagou.com/jobs/list_',
+
+    CITY_GET_URL_MIDDLE: '?px=default&city=',
+
+    DISTRICT_GET_URL_MIDDLE: '&district=',
 
     MOBILE_CITY_URL: 'http://www.lagou.com/custom/search.json?city=',
 

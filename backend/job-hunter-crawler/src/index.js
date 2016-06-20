@@ -82,7 +82,7 @@ function task() {
         return;
     }
     isRunning = true;
-    
+
 }
 
 function initTask() {
