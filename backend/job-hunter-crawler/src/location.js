@@ -9,9 +9,31 @@ const Config = require('./config.js');
 require('./model/TaskModel.js');
 
 function main() {
-    getTask().then(() => {
+    connectDB().then(getTask).then(() => {
         console.log('done');
     });
+}
+
+function connectDB() {
+    //use native Promise
+    mongoose.Promise = global.Promise;
+
+    //get db url
+    let url = 'mongodb://';
+    if (Config.DATABASE_USERNAME &&
+        DATABASE_USERNAME !== '' &&
+        Config.DATABASE_PASSWORD &&
+        Config.DATABASE_PASSWORD !==  '') {
+        url += Config.DATABASE_USERNAME + ':' + Config.DATABASE_PASSWORD + '@';
+    }
+    url += Config.DATABASE_HOST;
+    if (Config.DATABASE_PORT && Config.DATABASE_PORT !== '') {
+        url += ':' + Config.DATABASE_PORT;
+    }
+    url += '/' + Config.DATABASE_NAME;
+
+    //do connect
+    return mongoose.connect(url, Config.DATABASE_OPTIONS);
 }
 
 function getTask() {
@@ -63,9 +85,26 @@ function getAreas(body, selector) {
 
 function saveTasks(city, dist, zones) {
     console.log(city + ' ' + dist + JSON.stringify(zones));
+    let models = [];
     for (let zone of zones) {
-        
+        for (let job of Config.JOB_TYPES) {
+            models.push({
+                job: job,
+                city: city,
+                dist: dist,
+                zone: zone,
+                startNum: 1,
+                maxNum: 1
+            });
+        }
     }
+    mongoose.model('TaskModel').insertMany(models, (err, docs) => {
+        if (err) {
+            Logger.error(`Insert district ${dist} of city ${city}. Msg:${err.message} Strack:${err.stack}`);
+        } else {
+            console.log(dist + ' saved');
+        }
+    });
 }
 
 if (require.main === module) {
