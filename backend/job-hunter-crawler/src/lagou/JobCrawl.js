@@ -30,18 +30,18 @@ module.exports = class JobCrawl {
 
     start() {
         return this._getSeedTasks().then(() => {
-                return this._initSeedTasks();
+            return this._initSeedTasks();
 
-            }).then(() => {
-                return this._jobTask();
+        }).then(() => {
+            return this._jobTask();
 
-            }).then(() => {
-                this.end();
+        }).then(() => {
+            this.end();
 
-            }).catch((error) => {
-                Logger.error(error);
-                throw error;
-            });
+        }).catch((error) => {
+            Logger.error(error);
+            throw error;
+        });
     }
 
     end() {

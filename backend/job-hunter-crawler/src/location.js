@@ -2,56 +2,20 @@ const mongoose = require('mongoose');
 const urlencode = require('urlencode');
 const cheerio = require('cheerio');
 
+require('./model/TaskModel.js');
+const Database = require('./db/Database.js');
 const Client = require('./support/Client');
 const Utils = require('./support/Utils.js');
 const Logger = require('./support/Log.js');
+const LocationError = require('./exception/LocationError.js');
+const DataBaseError = require('./exception/DatabaseError.js');
+const HttpError = require('./exception/HttpError.js');
 const Config = require('./config.js');
-require('./model/TaskModel.js');
 
 function main() {
-    connectDB().then(test).then(() => {
-        console.log('done');
+    Database.connect().then(getTask).then(() => {
+        Logger.debug('location crawl done');
     });
-}
-
-function test() {
-    mongoose.model('TaskModel').find().limit(1).exec((err, docs) => {
-        if (!err) {
-            console.log(docs[0]);
-            console.log(Object.prototype.toString.call(docs[0].updated));
-            console.log(docs[0].updated.getFullYear());
-            console.log(new Date().getFullYear());
-            console.log(docs[0].updated.getMonth());
-            console.log(new Date().getMonth());
-            console.log(docs[0].updated.getDate());
-            console.log(new Date().getDate());
-        } else {
-            console.log(err);
-        }
-        process.exit();
-    });
-}
-
-function connectDB() {
-    //use native Promise
-    mongoose.Promise = global.Promise;
-
-    //get db url
-    let url = 'mongodb://';
-    if (Config.DATABASE_USERNAME &&
-        DATABASE_USERNAME !== '' &&
-        Config.DATABASE_PASSWORD &&
-        Config.DATABASE_PASSWORD !==  '') {
-        url += Config.DATABASE_USERNAME + ':' + Config.DATABASE_PASSWORD + '@';
-    }
-    url += Config.DATABASE_HOST;
-    if (Config.DATABASE_PORT && Config.DATABASE_PORT !== '') {
-        url += ':' + Config.DATABASE_PORT;
-    }
-    url += '/' + Config.DATABASE_NAME;
-
-    //do connect
-    return mongoose.connect(url, Config.DATABASE_OPTIONS);
 }
 
 function getTask() {
@@ -64,23 +28,30 @@ function getTask() {
             urlencode.encode(city, 'utf8');
 
         let cp = Client.get(url, headers).then((body) => {
+
             let dists = getAreas(body, '.detail-district-area a');
             let distP = [];
             for (let dist of dists) {
-                let durl = url + Config.DISTRICT_GET_URL_MIDDLE +
+                let distUrl = url + Config.DISTRICT_GET_URL_MIDDLE +
                     urlencode.encode(dist, 'utf8');
-                let dp = Client.get(durl, headers).then((body) => {
+
+                let dp = Client.get(distUrl, headers).then((body) => {
                     let zones = getAreas(body, '.detail-bizArea-area a');
                     saveTasks(city, dist, zones);
+
                 }).catch((err) => {
-                    Logger.error(`Cannot retrieve zones of district ${dist} of city ${city}. Msg:${err.message} Strack:${err.stack}`);
+                    Logger.error(new HttpError(err,
+                        `Cannot retrieve zones in ${dist} district of ${city} city`));
                 });
+
                 distP.push(dp);
             }
             return Promise.all(distP);
+
         }).catch((err) => {
-            Logger.error(`Cannot retrieve city ${city}. Msg:${err.message} Strack:${err.stack}`);
+            Logger.error(new LocationError(err, `Cannot retrieve locations of ${city} city`));
         });
+
         cityP.push(cp);
     }
     return Promise.all(cityP);
@@ -88,10 +59,10 @@ function getTask() {
 
 function getAreas(body, selector) {
     let $ = cheerio.load(body);
-    let dists = $(selector).not('.active');
+    let areas = $(selector).not('.active');
     let result = [];
-    if (dists && dists.length > 0) {
-        dists.each(function() {
+    if (areas && areas.length > 0) {
+        areas.each(function() {
             let v = $(this).text().trim();
             if (v !== '') {
                 result.push(v);
@@ -102,7 +73,7 @@ function getAreas(body, selector) {
 }
 
 function saveTasks(city, dist, zones) {
-    console.log(city + ' ' + dist + JSON.stringify(zones));
+    Logger.debug([].concat('save tasks', city, dist, zones));
     let models = [];
     for (let zone of zones) {
         for (let job of Config.JOB_TYPES) {
@@ -116,11 +87,16 @@ function saveTasks(city, dist, zones) {
             });
         }
     }
+    if (models.length === 0) {
+        Logger.error(new LocationError(`No zone in ${dist} district of ${city} city`));
+        return;
+    }
     mongoose.model('TaskModel').insertMany(models, (err, docs) => {
         if (err) {
-            Logger.error(`Insert district ${dist} of city ${city}. Msg:${err.message} Strack:${err.stack}`);
+            Logger.error(new DataBaseError(err, `Failed to insert district ${dist} of city ${city}`));
+
         } else {
-            console.log(dist + ' saved');
+            Logger.debug([].concat(city, dist, docs, 'saved'));
         }
     });
 }
