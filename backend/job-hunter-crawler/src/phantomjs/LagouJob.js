@@ -12,7 +12,7 @@ function send(data) {
         console.log(data.error);
         setTimeout(function(){
             ws.close();
-        }, 100);
+        }, 1000);
     }
 }
 

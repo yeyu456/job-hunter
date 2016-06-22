@@ -1,15 +1,11 @@
-const fs = require('fs');
-const path = require('path');
-
-const mongoose = require('mongoose');
-
 const Utils = require('./support/Utils.js');
 const Logger = require('./support/Log.js');
 const Crawl = require('./lagou/Crawl.js');
+const Database = require('./db/Database.js');
 const Config = require('./config.js');
 
 let isDebug = false;
-let startTime = undefined;
+let startTime = null;
 let isRunning = false;
 let rejectNum = 0;
 
@@ -32,81 +28,46 @@ function main() {
             startTime += Config.ONE_DAY;
         }
     }
-    console.log('startTime');
-    console.log(startTime);
-    connectDB().then(() => {
-        task();
-
-    }).catch((error) => {
-        Logger.error(error);
-        throw error;
-    });
-}
-
-function connectDB() {
-    //regist all models
-    let dir = path.join(__dirname, 'model');
-    let models = fs.readdirSync(dir);
-    for (let model of models) {
-        require(path.join(dir, model));
-    }
-
-    //use native Promise
-    mongoose.Promise = global.Promise;
-
-    //get db url
-    let url = 'mongodb://';
-    if (Config.DATABASE_USERNAME &&
-        DATABASE_USERNAME !== '' &&
-        Config.DATABASE_PASSWORD &&
-        Config.DATABASE_PASSWORD !==  '') {
-        url += Config.DATABASE_USERNAME + ':' + Config.DATABASE_PASSWORD + '@';
-    }
-    url += Config.DATABASE_HOST;
-    if (Config.DATABASE_PORT && Config.DATABASE_PORT !== '') {
-        url += ':' + Config.DATABASE_PORT;
-    }
-    url += '/' + Config.DATABASE_NAME;
-
-    //do connect
-    return mongoose.connect(url, Config.DATABASE_OPTIONS);
+    // connect -> task
+    Database.connect()
+        .then(task.bind(this))
+        .catch((error) => {
+            Logger.error(error);
+            throw error;
+        });
 }
 
 function task() {
     //In case of multiple task running at the same time
     if (isRunning) {
         return;
-    } else if (new Date().getTime() < startTime) {
-        console.log('not in time');
+
+    } else if (Utils.isStartTime(startTime)) {
+        Logger.info('Not the start time.');
         setTimeout(task, Config.CHECK_INTERVAL);
-        return;
+
+    } else {
+        Logger.info('startTime' + startTime);
+        isRunning = true;
+        crawlJob();
     }
-    isRunning = true;
-
 }
 
-function initTask() {
-}
-
-function startCrawl() {
-    let crawl = new Crawl();
-    crawl.start().then(() => {
+function crawlJob() {
+    let crawlTask = new Crawl();
+    crawlTask.start().then(() => {
         startTime = Utils.getNextStartTime(startTime);
         isRunning = false;
         rejectNum = 0;
 
-    }).catch((err) => {
-        console.log(err);
-        crawl.end();
-        return;
+    }).catch((error) => {
         rejectNum++;
         isRunning = false;
         if (rejectNum > Config.MAX_REJECT_NUM) {
-            Logger.fatal('No more running.', err);
+            Logger.fatal('No more running.', error);
             process.exit(1);
 
         } else {
-            Logger.error(err);
             isRunning = false;
             setTimeout(task, Config.RETRY_INTERVAL * rejectNum);
         }

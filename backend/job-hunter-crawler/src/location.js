@@ -9,8 +9,26 @@ const Config = require('./config.js');
 require('./model/TaskModel.js');
 
 function main() {
-    connectDB().then(getTask).then(() => {
+    connectDB().then(test).then(() => {
         console.log('done');
+    });
+}
+
+function test() {
+    mongoose.model('TaskModel').find().limit(1).exec((err, docs) => {
+        if (!err) {
+            console.log(docs[0]);
+            console.log(Object.prototype.toString.call(docs[0].updated));
+            console.log(docs[0].updated.getFullYear());
+            console.log(new Date().getFullYear());
+            console.log(docs[0].updated.getMonth());
+            console.log(new Date().getMonth());
+            console.log(docs[0].updated.getDate());
+            console.log(new Date().getDate());
+        } else {
+            console.log(err);
+        }
+        process.exit();
     });
 }
 

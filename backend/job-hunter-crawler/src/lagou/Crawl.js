@@ -16,7 +16,7 @@ module.exports = class Crawl {
     end() {
         this.job.end();
         //this.company.end();
-        Logger.log('crawl end');
+        Logger.info('crawl end');
     }
 
     _saveCompany(company) {
@@ -26,4 +26,4 @@ module.exports = class Crawl {
     _companyTask() {
 
     }
-}
+};

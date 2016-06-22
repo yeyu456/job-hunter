@@ -107,6 +107,8 @@ const Config = {
 
     },
 
+    EMAIL_LOG_LEVEL: 1, //LOG_TYPE
+
 
 
     //****************** LOG ******************//
@@ -115,14 +117,15 @@ const Config = {
 
     ERROR_PATH: 'log/err.log',
 
-    LogType: {
+    LOG_TYPE: {
+        DEBUG: -1,
         LOG: 0,
         WARN: 1,
         ERROR: 2,
         FATAL: 3
     },
 
-    LOG_LEVEL: 0, // 0:log 1:warn 2:error 3:fatal
+    LOG_LEVEL: 0, //LOG_TYPE
 
 
 
