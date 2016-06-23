@@ -24,7 +24,7 @@ function getTask() {
 
     let cityP = [];
     for (let city of Config.CITIES) {
-        let url = Config.CITY_GET_URL + Config.JOB_TYPES[0] + Config.CITY_GET_URL_MIDDLE +
+        let url = Config.GET_URL + Config.JOB_TYPES[0] + Config.CITY_GET_URL +
             urlencode.encode(city, 'utf8');
 
         let cp = Client.get(url, headers).then((body) => {
@@ -32,7 +32,7 @@ function getTask() {
             let dists = getAreas(body, '.detail-district-area a');
             let distP = [];
             for (let dist of dists) {
-                let distUrl = url + Config.DISTRICT_GET_URL_MIDDLE +
+                let distUrl = url + Config.DISTRICT_GET_URL +
                     urlencode.encode(dist, 'utf8');
 
                 let dp = Client.get(distUrl, headers).then((body) => {

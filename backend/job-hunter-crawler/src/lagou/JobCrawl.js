@@ -23,8 +23,10 @@ module.exports = class JobCrawl {
         this.ws.on('message', function incoming(message) {
             console.log('received: %s', message);
         });
-        this.interval = Config.TASK_INTERVAL;
         this.jobEvent = new EventEmitter();
+        this.jobEvent.on('cp', this._crawlCP.bind(this));
+        this.interval = Config.TASK_INTERVAL;
+        this.failedNum = 0;
         this.curJobTask = 0;
     }
 
@@ -33,6 +35,7 @@ module.exports = class JobCrawl {
             return this._initSeedTasks();
 
         }).then(() => {
+            this._crawlCP();
             return this._jobTask();
 
         }).then(() => {
@@ -55,7 +58,7 @@ module.exports = class JobCrawl {
             mongoose.model('TaskModel').find().sort({
                 city:1,
                 job:1
-            }).exec((error, docs) => {
+            }).limit(3).exec((error, docs) => {
                 if (error) {
                     error = new DatabaseError(error);
                     Logger.error(error);
@@ -78,14 +81,16 @@ module.exports = class JobCrawl {
 
     _initSeedTasks() {
         let tasks = [];
+        //remove finished task
+        this.seedTasks = this.seedTasks.filter((v) => {
+            return !Utils.isSameDay(v.updated, new Date()) ||
+                v.maxNum <= 1 ||
+                v.startNum <= v.maxNum;
+        });
         for (let index in this.seedTasks) {
             if (Utils.isSameDay(this.seedTasks[index].updated, new Date())) {
                 //No need to crawl max page num again while updated today
                 if (this.seedTasks[index].maxNum > 1) {
-                    //reset finished task
-                    if (this.seedTasks[index].startNum > this.seedTasks[index].maxNum) {
-                        this.seedTasks[index] = null;
-                    }
                     continue;
                 }
 
@@ -101,10 +106,6 @@ module.exports = class JobCrawl {
             });
             tasks.push(p);
         }
-        //remove finished task
-        this.seedTasks = this.seedTasks.filter((v) => {
-            return v !== null;
-        });
         return Promise.all(tasks);
     }
 
@@ -127,7 +128,7 @@ module.exports = class JobCrawl {
     }
 
     _startNewTask(id){
-        console.log('start new task ' + id);
+        Logger.debug('start new task ' + id);
         let index;
         let moreDelay = 0;
         if (this.seedTasks.length === 0) {
@@ -168,35 +169,44 @@ module.exports = class JobCrawl {
         let task = this.seedTasks.splice(taskIndex, 1)[0];
 
         let startPageNum = task.startNum;
+        let url = Config.CITY_URL + Config.CITY_GET_URL + urlencode.encode(task.city, 'utf8') +
+            Config.DISTRICT_GET_URL + urlencode.encode(task.dist, 'utf8') +
+            Config.ZONE_GET_URL + urlencode(task.zone, 'utf8') + Config.CITY_URL_POSTFIX
         let options = JSON.parse(Config.DEFAULT_LAGOU_POST_HEADERS);
-        options['Referer'] = Config.CITY_REF + task.job + Config.CITY_REF_POSTFIX;
         let data = {
             first : false,
             pn : startPageNum,
             kd : task.job
         };
-        Client.post(task.url, options, data).then((data) => {
+        Client.post(url, options, data).then((data) => {
             data = JSON.parse(data);
-            if (parseInt(data['content']['pageNo']) !== startPageNum) {
-                Logger.error(new Error(`wrong page number ${startPageNum}-${data.content.pageNo}`));
-                this.failedTasks.push(task);
-                resolve();
-                return;
+            if (!this._isValidData(data)) {
+                throw new StructError('!!!data structure changed!!!', JSON.stringify(data));
+
+            } else if (parseInt(data['content']['pageNo']) !== startPageNum) {
+                throw new JobDataError(`Unmatched page number ${startPageNum}-${data.content.pageNo}`);
 
             } else {
-                task.maxPageNum = this._getMaxPageNum(data);
+                task.maxNum = Utils.getMaxPageNum(
+                    data['content']['positionResult']['totalCount'],
+                    data['content']['positionResult']['pageSize']
+                );
+                task.startNum++;
                 this._saveJobs(data['content']['positionResult']['result'],
                     task.city, task.dist, task.zone);
-                this.seedTasks.push(task);
+                this._updateTask(task);
                 resolve();
-                return;
             }
 
         }).catch((err) => {
             Logger.error(err);
-            this.failedTasks.push(task);
+            this.failedNum++;
+            if (this.failedNum > Config.CRAWL_CONTINGENCY_PLAN_TRESHOLD) {
+                this.jobEvent.emit('cp');
+                this.failedNum = 0;
+            }
+            this.seedTasks.push(task);
             resolve();
-            return;
         });
     }
 
@@ -225,36 +235,26 @@ module.exports = class JobCrawl {
         //switch proxy ip
     }
 
-    _getMaxPageNum(data) {
-        if (data) {
-            if (data.hasOwnProperty('content') &&
-            data['content'] &&
-            data['content'].hasOwnProperty('positionResult') &&
-            data['content']['positionResult'].hasOwnProperty('totalCount') &&
-            data['content']['positionResult'].hasOwnProperty('pageSize') &&
-            data['content']['positionResult'].hasOwnProperty('result')) {
-                return Utils.getMaxPageNum(
-                    data['content']['positionResult']['totalCount'],
-                    data['content']['positionResult']['pageSize']
-                );
-            } else {
-                throw new StructError('!!!data structure changed!!!', JSON.stringify(data));
-            }
-        } else {
-            throw new Error('No data');
-        }
+    _isValidData(data) {
+        return !data ||
+            !data['content'] ||
+            !data['content']['positionResult'] ||
+            !data['content']['positionResult']['totalCount'] ||
+            !data['content']['positionResult']['pageSize'] ||
+            !data['content']['positionResult']['result'];
     }
 
     _saveJobs(jobs, city, dist, zone) {
         if (jobs.length <= 0) {
             return;
         }
-        let models = [];
+        let jobModels = [];
+        let companyModels = [];
         for (let job of jobs) {
-            if (job.city !== city) {
+            if (job.city !== city || job.district !== dist) {
                 Logger.error(new JobDataError(
-                    `Not matched job id ${job.positionId} with city ${job.city} / ${city}-${dist}-${zone}`));
-                models.push({
+                    `Not matched job id ${job.positionId} with location ${job.city}-${job.district} / ${city}-${dist}-${zone}`));
+                jobModels.push({
                     id: job.positionId,
                     companyId: job.companyId,
                     name: job.positionName,
@@ -263,12 +263,12 @@ module.exports = class JobCrawl {
                     year: job.workYear,
                     created: job.createTimeSort,
                     city: job.city,
-                    dist: '-',
+                    dist: job.district,
                     zone: '-'
                 });
 
             } else {
-                models.push({
+                jobModels.push({
                     id: job.positionId,
                     companyId: job.companyId,
                     name: job.positionName,
@@ -281,10 +281,20 @@ module.exports = class JobCrawl {
                     zone: zone
                 });
             }
+            companyModels.push({
+                id: job.companyId,
+                name: job.companyShortName,
+                field: job.industryField
+            });
         }
-        mongoose.model('JobModel').insertMany(models, (error) => {
+        mongoose.model('JobModel').insertMany(jobModels, (error) => {
             if (error) {
-                Logger.error(`Cannot insert jobs with ${city}-${dist}-${zone}`, error);
+                throw new DatabaseError(`Cannot insert jobs with ${city}-${dist}-${zone}`, error);
+            }
+        });
+        mongoose.model('CompanyModel').insertMany(companyModels, (error) => {
+            if (error) {
+                throw new DataBaseError(`Cannot insert companies with ${city}-${dist}-${zone}`, error);
             }
         });
     }

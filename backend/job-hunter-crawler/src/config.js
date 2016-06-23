@@ -50,7 +50,7 @@ const Config = {
         'Java', 'Node.js', 'Javascript', 'gaoduanjishuzhiwei'
     ],
 
-    CITY_URL: 'http://www.lagou.com/jobs/positionAjax.json?city=',
+    CITY_URL: 'http://www.lagou.com/jobs/positionAjax.json',
 
     CITY_URL_POSTFIX: '&needAddtionalResult=false',
 
@@ -58,11 +58,13 @@ const Config = {
 
     CITY_REF_POSTFIX: '/?labelWords=label',
 
-    CITY_GET_URL: 'http://www.lagou.com/jobs/list_',
+    GET_URL: 'http://www.lagou.com/jobs/list_',
 
-    CITY_GET_URL_MIDDLE: '?px=default&city=',
+    CITY_GET_URL: '?px=default&city=',
 
-    DISTRICT_GET_URL_MIDDLE: '&district=',
+    DISTRICT_GET_URL: '&district=',
+
+    ZONE_GET_URL: '&bizArea=',
 
     MOBILE_CITY_URL: 'http://www.lagou.com/custom/search.json?city=',
 
@@ -80,9 +82,11 @@ const Config = {
 
     //****************** TASK ******************//
 
-    CONCURRENT_TASK_NUM: 1,
+    CONCURRENT_TASK_NUM: 3,
 
-    TASK_INTERVAL: 2 * 1000, //1s
+    TASK_INTERVAL: 2 * 1000, //2s
+
+    CRAWL_CONTINGENCY_PLAN_TRESHOLD: 3,
 
 
 

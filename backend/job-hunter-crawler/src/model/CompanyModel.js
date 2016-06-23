@@ -13,6 +13,10 @@ const CompanySchema = new mongoose.Schema({
     name: {
         type: String,
         required: true
+    },
+    field: {
+        type: String,
+        required: true
     }
 }, SCHEMA_OPTIONS);
 
