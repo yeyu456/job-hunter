@@ -117,12 +117,10 @@ module.exports = class JobCrawl {
         }
         return new Promise((resolve, reject) => {
             this.jobEvent.on('endJobTask', (i) => {
-                if (this.curJobTask <= 0) {
-                    resolve();
-
-                } else {
-                    Logger.debug('finsih job task ' + i);
+                if (this.curJobTask > 0) {
+                    Logger.debug(`finsih job task ${i}`);
                 }
+                resolve();
             });
         });
     }
@@ -187,15 +185,10 @@ module.exports = class JobCrawl {
                 throw new JobDataError(`Unmatched page number ${startPageNum}-${data.content.pageNo}`);
 
             } else {
-                task.maxNum = Utils.getMaxPageNum(
-                    data['content']['positionResult']['totalCount'],
-                    data['content']['positionResult']['pageSize']
-                );
-                task.startNum++;
-                this._saveJobs(data['content']['positionResult']['result'],
-                    task.city, task.dist, task.zone);
-                this._updateTask(task);
-                resolve();
+                this._save(data['content']['positionResult']['result'], task)
+                .then(() => {
+                    resolve();
+                });
             }
 
         }).catch((err) => {
@@ -244,14 +237,14 @@ module.exports = class JobCrawl {
             !data['content']['positionResult']['result'];
     }
 
-    _saveJobs(jobs, city, dist, zone) {
+    _save(jobs, task) {
         if (jobs.length <= 0) {
             return;
         }
         let jobModels = [];
         let companyModels = [];
         for (let job of jobs) {
-            if (job.city !== city || job.district !== dist) {
+            if (job.city !== task.city || job.district !== task.dist) {
                 Logger.error(new JobDataError(
                     `Not matched job id ${job.positionId} with location ${job.city}-${job.district} / ${city}-${dist}-${zone}`));
                 jobModels.push({
@@ -276,9 +269,9 @@ module.exports = class JobCrawl {
                     education: job.education,
                     year: job.workYear,
                     created: job.createTimeSort,
-                    city: city,
-                    dist: dist,
-                    zone: zone
+                    city: task.city,
+                    dist: task.dist,
+                    zone: task.zone
                 });
             }
             companyModels.push({
@@ -287,15 +280,25 @@ module.exports = class JobCrawl {
                 field: job.industryField
             });
         }
-        mongoose.model('JobModel').insertMany(jobModels, (error) => {
-            if (error) {
-                throw new DatabaseError(`Cannot insert jobs with ${city}-${dist}-${zone}`, error);
-            }
+        let p = mongoose.model('JobModel').insertIfNotExist(jobModels).then(() => {
+            return mongoose.model('CompanyModel').insertIfNotExist(companyModels);
+
+        }).then(() => {
+            task.maxNum = Utils.getMaxPageNum(
+                data['content']['positionResult']['totalCount'],
+                data['content']['positionResult']['pageSize']
+            );
+            task.startNum++;
+            return new Promise((resolve, reject) => {
+                mongoose.model('TaskModel').update({ _id: task._id }, task, (err) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve();
+                    }
+                });
+            });
         });
-        mongoose.model('CompanyModel').insertMany(companyModels, (error) => {
-            if (error) {
-                throw new DataBaseError(`Cannot insert companies with ${city}-${dist}-${zone}`, error);
-            }
-        });
+        return p;
     }
 };

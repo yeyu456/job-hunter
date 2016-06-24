@@ -46,13 +46,9 @@ TaskSchema.pre('validate', function(next) {
     }
 });
 
-TaskSchema.statics.getAll = function() {
-    return this.find({
-        job: {$ne: null},
-        city: {$ne: null},
-        dist: {$ne: null},
-        zone: {$ne: null}});
-};
+TaskSchema.post('init', function(doc) {
+    doc.updated = Date.now();
+});
 
 let TaskModel = mongoose.model('TaskModel', TaskSchema);
 TaskModel.on('error', function (error) {

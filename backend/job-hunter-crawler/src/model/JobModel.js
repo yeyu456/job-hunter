@@ -58,3 +58,32 @@ JobModel.on('error', function (error) {
         Logger.error(error);
     }
 });
+
+JobSchema.statics.insertIfNotExist = function _insertIfNotExist(models) {
+    let ps = [];
+    for (let m of models) {
+        let p = new Promise((resolve) => {
+            this.findOne({id: m.id}).exec((err, job) => {
+                if (err) {
+                    throw new DatabaseError(err, `Cannot query job with id ${m.id}`);
+                } else if (job !== null){
+                    Logger.debug(`Duplicated job with id ${m.id}`);
+                    resolve();
+
+                } else {
+                    this.save(m, (err, job) => {
+                        if (err) {
+                            throw new DatabaseError(err, `Cannot create job with id ${m.id}`);
+                        } else {
+                            resolve();
+                        }
+                    })
+                }
+            });
+        }).catch((err) => {
+            Logger.error(err);
+        });
+        ps.push(p);
+    }
+    return Promise.all(ps);
+}
