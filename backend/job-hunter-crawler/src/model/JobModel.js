@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const Logger = require('./../support/log.js');
 const SCHEMA_OPTIONS = require('./../config.js').SCHEMA_OPTIONS;
+const DatabaseError = require('./../exception/DatabaseError.js');
 
 const JobSchema = new mongoose.Schema({
     id: {
@@ -52,15 +53,9 @@ const JobSchema = new mongoose.Schema({
 
 JobSchema.index({id: 1, companyId: 1}, {unique: true});
 
-let JobModel = mongoose.model('JobModel', JobSchema);
-JobModel.on('error', function (error) {
-    if (error) {
-        Logger.error(error);
-    }
-});
-
 JobSchema.statics.insertIfNotExist = function _insertIfNotExist(models) {
     let ps = [];
+    let jobModel = new this();
     for (let m of models) {
         let p = new Promise((resolve) => {
             this.findOne({id: m.id}).exec((err, job) => {
@@ -71,13 +66,14 @@ JobSchema.statics.insertIfNotExist = function _insertIfNotExist(models) {
                     resolve();
 
                 } else {
-                    this.save(m, (err, job) => {
+                    jobModel.save(m, (err, job) => {
                         if (err) {
+                            console.log(m);
                             throw new DatabaseError(err, `Cannot create job with id ${m.id}`);
                         } else {
                             resolve();
                         }
-                    })
+                    });
                 }
             });
         }).catch((err) => {
@@ -86,4 +82,11 @@ JobSchema.statics.insertIfNotExist = function _insertIfNotExist(models) {
         ps.push(p);
     }
     return Promise.all(ps);
-}
+};
+
+let JobModel = mongoose.model('JobModel', JobSchema);
+JobModel.on('error', function (error) {
+    if (error) {
+        Logger.error(error);
+    }
+});

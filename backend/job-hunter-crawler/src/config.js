@@ -84,7 +84,7 @@ const Config = {
 
     CONCURRENT_TASK_NUM: 3,
 
-    TASK_INTERVAL: 2 * 1000, //2s
+    TASK_INTERVAL: 3 * 1000, //2s
 
     CRAWL_CONTINGENCY_PLAN_TRESHOLD: 3,
 

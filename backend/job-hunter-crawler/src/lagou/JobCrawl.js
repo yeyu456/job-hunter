@@ -32,10 +32,10 @@ module.exports = class JobCrawl {
 
     start() {
         return this._getSeedTasks().then(() => {
+            this._crawlCP();
             return this._initSeedTasks();
 
         }).then(() => {
-            this._crawlCP();
             return this._jobTask();
 
         }).then(() => {
@@ -178,7 +178,7 @@ module.exports = class JobCrawl {
         };
         Client.post(url, options, data).then((data) => {
             data = JSON.parse(data);
-            if (!this._isValidData(data)) {
+            if (this._isNotValidData(data)) {
                 throw new StructError('!!!data structure changed!!!', JSON.stringify(data));
 
             } else if (parseInt(data['content']['pageNo']) !== startPageNum) {
@@ -223,12 +223,12 @@ module.exports = class JobCrawl {
         childProcess.execFile(phantomjs.path, args, (err, stdout, stderr) => {});
 
         //increase task crawl interval
-        this.interval *= 2;
+        //this.interval *= 2;
 
         //switch proxy ip
     }
 
-    _isValidData(data) {
+    _isNotValidData(data) {
         return !data ||
             !data['content'] ||
             !data['content']['positionResult'] ||

@@ -20,16 +20,9 @@ const CompanySchema = new mongoose.Schema({
     }
 }, SCHEMA_OPTIONS);
 
-
-let CompanyModel = mongoose.model('CompanyModel', CompanySchema);
-CompanyModel.on('error', function (error) {
-    if (error) {
-        Logger.error(error);
-    }
-});
-
 CompanySchema.statics.insertIfNotExist = function _insertIfNotExist(models) {
     let ps = [];
+    let companyModel = new this();
     for (let m of models) {
         let p = new Promise((resolve) => {
             this.findOne({id: m.id}).exec((err, company) => {
@@ -40,7 +33,7 @@ CompanySchema.statics.insertIfNotExist = function _insertIfNotExist(models) {
                     resolve();
 
                 } else {
-                    this.save(m, (err, company) => {
+                    companyModel.save(m, (err, company) => {
                         if (err) {
                             throw new DatabaseError(err, `Cannot create company with id ${m.id}`);
                         } else {
@@ -55,4 +48,11 @@ CompanySchema.statics.insertIfNotExist = function _insertIfNotExist(models) {
         ps.push(p);
     }
     return Promise.all(ps);
-}
+};
+
+let CompanyModel = mongoose.model('CompanyModel', CompanySchema);
+CompanyModel.on('error', function (error) {
+    if (error) {
+        Logger.error(error);
+    }
+});

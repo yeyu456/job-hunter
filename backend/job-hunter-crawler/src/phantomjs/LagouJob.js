@@ -42,29 +42,32 @@ function openPage(city, job, ws) {
     //         }
     //     }
     // };
-    page.open(getUrl, function(status) {
-        if (status !== 'success') {
-            send({
-                error:'Cannot access url ' + getUrl,
-                city:city,
-                job:job
-            });
-        } else {
-            send({
-                msg: 'done'
-            });
-        }
-    });
+    var inter = setInterval(function () {
+        page.open(getUrl, function(status) {
+            if (status !== 'success') {
+                send({
+                    error:'Cannot access url ' + getUrl,
+                    city:city,
+                    job:job
+                });
+                clearInterval(inter);
+            } else {
+                send({
+                    msg: 'done'
+                });
+            }
+        });
+    }.bind(this), Config.TASK_INTERVAL);
 }
 
 function main() {
     ws = new WebSocket('ws://127.0.0.1:8080');
     ws.onerror = function _onWsError() {
         phantom.exit(1);
-    }
+    };
     ws.onclose = function _onWsClose() {
         phantom.exit();
-    }
+    };
     ws.onmessage = function _onWsMsg(event) {
         console.log(JSON.stringify(event));
         var data = event.data;

@@ -9,7 +9,7 @@ function getStartTime(date = new Date()) {
     return Date.parse(date.toDateString() + ' ' + Config.START_TIME);
 }
 
-function isStartTime(date) {
+function isStartTime(startTime) {
     return new Date().getTime() > startTime;
 }
 
