@@ -8,12 +8,6 @@ var ws;
 
 function send(data) {
     ws.send(JSON.stringify(data));
-    if (data.hasOwnProperty('error')) {
-        console.log(data.error);
-        setTimeout(function(){
-            ws.close();
-        }, 1000);
-    }
 }
 
 function initPage(proxyIP, proxyPort, proxyType, useragent) {
@@ -85,10 +79,10 @@ function main() {
                 openPage(data['city'], data['job'], ws);
 
             } else {
-                send({error : 'invalid proxy port'});
+                throw new PhantomError('invalid proxy port');
             }
         } else {
-            send({error : 'invalid data'});
+            throw new PhantomError('invalid data');
         }
     }
 }

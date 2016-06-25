@@ -46,6 +46,10 @@ function getRandomInt(from, to) {
     return Math.floor(Math.random() * (to - from)) + from;
 }
 
+function isValidIP(ip) {
+    return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ip);
+}
+
 module.exports = {
     getUserAgent: getUserAgent,
     getStartTime: getStartTime,
@@ -53,5 +57,6 @@ module.exports = {
     getNextStartTime: getNextStartTime,
     isSameDay: isSameDay,
     getMaxPageNum: getMaxPageNum,
-    getRandomInt: getRandomInt
+    getRandomInt: getRandomInt,
+    isValidIP: isValidIP
 }

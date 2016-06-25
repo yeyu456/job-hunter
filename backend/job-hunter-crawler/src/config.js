@@ -88,6 +88,11 @@ const Config = {
 
     CRAWL_CONTINGENCY_PLAN_TRESHOLD: 3,
 
+    EVENT_SEED: 'seed',
+
+    EVENT_EMULATE: 'emulate',
+
+    EVENT_END: 'end',
 
 
     //****************** TIME ******************//

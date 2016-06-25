@@ -1,17 +1,16 @@
 const EventEmitter = require('events');
-const path = require('path');
-const childProcess = require('child_process');
 
-const phantomjs = require('phantomjs-prebuilt');
 const urlencode = require('urlencode');
-const ws = require('ws');
 const mongoose = require('mongoose');
 
+const Config = require('./../config.js');
+const ProxyManager = require('./../proxy/ProxyManager.js');
+const Bridge = require('./../phantomjs/Bridge.js');
 const Utils = require('./../support/Utils.js');
 const Logger = require('./../support/Log.js');
 const Client = require('./../support/Client.js');
-const Config = require('./../config.js');
 const Cache = require('./../db/Cache.js');
+
 const StructError = require('./../exception/StructError.js');
 const JobDataError = require('./../exception/JobDataError.js');
 const DatabaseError = require('./../exception/DatabaseError.js');
@@ -19,31 +18,35 @@ const DatabaseError = require('./../exception/DatabaseError.js');
 module.exports = class JobCrawl {
 
     constructor() {
-        this.ws = new ws.Server({port : 8080});
-        this.ws.on('message', function incoming(message) {
-            console.log('received: %s', message);
-        });
-        this.jobEvent = new EventEmitter();
-        this.jobEvent.on('cp', this._crawlCP.bind(this));
+        this.proxyManager = new ProxyManager();
         this.interval = Config.TASK_INTERVAL;
         this.failedNum = 0;
         this.curJobTask = 0;
+        this._initEvent();
+        this._initBridge();
+    }
+
+    _initEvent() {
+        this.jobEvent = new EventEmitter();
+        this.jobEvent.on(Config.EVENT_SEED, this._seed.bind(this));
+        this.jobEvent.on(Config.EVENT_EMULATE, this._emulate.bind(this));
+    }
+
+    _initBridge() {
+        this.bridge = new Bridge();
+        this.bridge.start();
     }
 
     start() {
-        return this._getSeedTasks().then(() => {
-            this._crawlCP();
-            return this._initSeedTasks();
-
-        }).then(() => {
-            return this._jobTask();
-
-        }).then(() => {
-            this.end();
-
-        }).catch((error) => {
-            Logger.error(error);
-            throw error;
+        this.jobEvent.emit(Config.EVENT_SEED);
+        return new Promise((resolve, reject) => {
+            this.jobEvent.on(Config.EVENT_END, (error) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            });
         });
     }
 
@@ -51,32 +54,36 @@ module.exports = class JobCrawl {
         Logger.info('job crawl end');
     }
 
-    _getSeedTasks() {
+    _seed() {
         this.seedTasks = [];
         this.failedTasks = [];
-        return new Promise((resolve, reject) => {
-            mongoose.model('TaskModel').find().sort({
-                city:1,
-                job:1
-            }).limit(3).exec((error, docs) => {
-                if (error) {
-                    error = new DatabaseError(error);
-                    Logger.error(error);
-                    reject(error);
+        mongoose.model('TaskModel').find().sort({
+            city:1,
+            job:1
+        }).limit(3).exec((error, docs) => {
+            if (error || docs.length === 0) {
+                error = error ? new DatabaseError(error) : new DatabaseError('Cannot find any tasks');
+                Logger.error(error);
 
-                } else {
-                    if (docs.length === 0) {
-                        error = new DatabaseError('Cannot find any tasks.');
-                        Logger.error(error);
-                        reject(error);
-
-                    } else {
-                        this.seedTasks = this.seedTasks.concat(docs);
-                        resolve();
-                    }
-                }
-            });
+            } else {
+                this.seedTasks = this.seedTasks.concat(docs);
+                this._crawl();
+            }
         });
+    }
+
+    _crawl() {
+        if (this.seedTasks.length === 0) {
+            return;
+        }
+    }
+
+    _emulate(task, proxy) {
+        this.bridge.push(task, proxy);
+    }
+
+    _task(task, cb) {
+
     }
 
     _initSeedTasks() {
@@ -201,31 +208,6 @@ module.exports = class JobCrawl {
             this.seedTasks.push(task);
             resolve();
         });
-    }
-
-    _crawlCP() {
-        // start crawl contingency plan
-        // stop all the running tasks
-
-
-        // Emulate browser and do some normal actions to mislead the crawl target
-        this.ws.on('connection', (socket) => {
-            socket.send(JSON.stringify({
-                city : urlencode.encode(Config.CITIES[0], 'utf8'),
-                job : Config.JOB_TYPES[0],
-                proxyIP : '112.65.200.211',
-                proxyPort : 80,
-                proxyType : 'http',
-                useragent : Utils.getUserAgent()
-            }));
-        });
-        let args = [path.join(__dirname, '..', 'phantomjs', 'LagouJob.js')];
-        childProcess.execFile(phantomjs.path, args, (err, stdout, stderr) => {});
-
-        //increase task crawl interval
-        //this.interval *= 2;
-
-        //switch proxy ip
     }
 
     _isNotValidData(data) {
