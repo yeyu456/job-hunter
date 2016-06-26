@@ -4,8 +4,9 @@ const path = require('path');
 const mkdirp = require('mkdirp');
 const nodemailer = require('nodemailer');
 
-const LogFileError = require('./../exception/LogFileError.js');
 const Config = require('./../config.js');
+const getLogDate = require('./../support/Utils.js').getLogDate;
+const LogFileError = require('./../exception/LogFileError.js');
 
 module.exports = class Logger {
 
@@ -20,7 +21,7 @@ module.exports = class Logger {
         if (Config.LOG_LEVEL > Config.LOG_TYPE.LOG) {
             return;
         }
-        Logger._record(Config.LOG_PATH, '[INFO]' + content);
+        Logger._record(Config.LOG_PATH, '\n[INFO]' + getLogDate() + content);
         if (Config.ENABLE_EMAIL && Config.EMAIL_LOG_LEVEL <= Config.LOG_TYPE.LOG) {
             Logger._email(content);
         }
@@ -30,7 +31,7 @@ module.exports = class Logger {
         if (Config.LOG_LEVEL > Config.LOG_TYPE.WARN) {
             return;
         }
-        Logger._record(Config.LOG_PATH, '[WARN]' + err.toString());
+        Logger._record(Config.LOG_PATH, '\n[WARN]' + getLogDate() + err.toString());
         if (Config.ENABLE_EMAIL && Config.EMAIL_LOG_LEVEL <= Config.LOG_TYPE.WARN) {
             Logger._email(err.toString());
         }
@@ -40,14 +41,14 @@ module.exports = class Logger {
         if (Config.LOG_LEVEL > Config.LOG_TYPE.ERROR) {
             return;
         }
-        Logger._record(Config.ERROR_PATH, '[ERROR]' + err.toString());
+        Logger._record(Config.ERROR_PATH, '\n[ERROR]' + err.toString());
         if (Config.ENABLE_EMAIL && Config.EMAIL_LOG_LEVEL <= Config.LOG_TYPE.ERROR) {
             Logger._email(err.toString());
         }
     }
 
     static fatal(err) {
-        Logger._record(Config.ERROR_PATH, '[FATAL]' + err.toString());
+        Logger._record(Config.ERROR_PATH, '\n[FATAL]' + err.toString());
         Logger._email(err.toString());
     }
 

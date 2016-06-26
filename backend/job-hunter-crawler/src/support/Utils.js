@@ -6,6 +6,12 @@ function getUserAgent() {
     return CrawlConfig.USER_AGENTS[0];
 }
 
+function getLogDate() {
+    let date = new Date();
+    return '[' + date.getFullYear() + '/' + (date.getMonth() + 1) + '/' + date.getDate() +
+        ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds() + ']\n';
+}
+
 function getStartTime(date = new Date()) {
     return Date.parse(date.toDateString() + ' ' + Config.START_TIME);
 }
@@ -62,6 +68,7 @@ function isNotValidData(data) {
 
 module.exports = {
     getUserAgent: getUserAgent,
+    getLogDate: getLogDate,
     getStartTime: getStartTime,
     isStartTime: isStartTime,
     getNextStartTime: getNextStartTime,

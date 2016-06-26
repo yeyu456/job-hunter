@@ -1,3 +1,4 @@
+const getLogDate = require('./../support/Utils.js').getLogDate;
 
 module.exports = class BaseError {
 
@@ -14,9 +15,6 @@ module.exports = class BaseError {
     }
 
     toString() {
-        let date = new Date();
-        return '[' + date.getFullYear() + '/' + (date.getMonth() + 1) + '/' + date.getDate() +
-            ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds() + ']\n' +
-            this.message;
+        return getLogDate() + this.message;
     }
 };
