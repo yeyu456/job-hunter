@@ -3,7 +3,7 @@
 
 var webpage = require('webpage');
 
-var Config = require('./../config.js');
+var CrawlConfig = require('./../crawl.config.js');
 
 var page;
 var ws;
@@ -31,20 +31,14 @@ function initPage(proxyIP, proxyPort, proxyType, useragent) {
 }
 
 function openPage(city, dist, zone, job) {
-    var getUrl = Config.GET_URL + job + Config.CITY_GET_URL + encodeURIComponent(city) +
-        Config.DISTRICT_GET_URL + encodeURIComponent(dist) +
-        Config.ZONE_GET_URL + encodeURIComponent(zone);
+    var getUrl = CrawlConfig.GET_URL + job + CrawlConfig.CITY_GET_URL + encodeURIComponent(city) +
+        CrawlConfig.DISTRICT_GET_URL + encodeURIComponent(dist) +
+        CrawlConfig.ZONE_GET_URL + encodeURIComponent(zone);
     page.open(getUrl, function(status) {
         if (status !== 'success') {
             send({error:'Cannot access url ' + getUrl});
         } else {
             send({msg: 'done'});
-            // var url = Config.CITY_URL + Config.CITY_GET_URL + encodeURIComponent(city) +
-            //     Config.DISTRICT_GET_URL + encodeURIComponent(dist) +
-            //     Config.ZONE_GET_URL + encodeURIComponent(zone) + Config.CITY_URL_POSTFIX;
-            // page.open(url, 'post', 'first=true&pn=1&kd=c#', function (status) {
-            //     console.log(page.plainText);
-            // })
         }
     });
 }

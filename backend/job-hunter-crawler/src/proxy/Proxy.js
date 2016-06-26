@@ -49,6 +49,6 @@ module.exports = class Proxy {
     }
 
     get url() {
-        return this._type + '//' + this._ip + ':' + this._port === 80? '': this._port;
+        return this._type + '://' + this._ip + (this._port === 80? '': ':' + this._port);
     }
 };

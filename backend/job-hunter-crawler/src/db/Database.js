@@ -37,6 +37,6 @@ module.exports = class Database {
         url += '/' + Config.DATABASE_NAME;
 
         //do connect
-        return mongoose.connect(url, Config.DATABASE_OPTIONS);
+        return mongoose.connect(url);
     }
-}
+};

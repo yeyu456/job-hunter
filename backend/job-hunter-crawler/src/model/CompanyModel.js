@@ -36,11 +36,10 @@ CompanySchema.statics.insertIfNotExist = function _insertIfNotExist(models) {
                     let companyModel = new CompanyModel(m);
                     companyModel.save((err, company) => {
                         if (err) {
-                            throw new DatabaseError(err, `Cannot create company with id ${m.id}`);
-                        } else {
-                            resolve();
+                            Logger.error(new DatabaseError(err, `Cannot create company with id ${m.id}`));
                         }
-                    })
+                        resolve();
+                    });
                 }
             });
         }).catch((err) => {

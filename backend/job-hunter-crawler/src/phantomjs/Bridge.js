@@ -52,7 +52,7 @@ module.exports = class Bridge {
             });
         });
         this.ws.on('error', this._onServerError.bind(this));
-        //this._initPhantom();
+        this._initPhantom();
     }
 
     _initPhantom() {

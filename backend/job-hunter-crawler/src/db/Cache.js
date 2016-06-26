@@ -72,8 +72,7 @@ module.exports = class Cache {
             data.expire = Date.now() + Config.CACHE_TIME;
             this.hitCount++;
             //return a copy
-            let value = JSON.parse(JSON.stringify(data.value));
-            return value;
+            return JSON.parse(JSON.stringify(data.value));
         } else {
             this.missCount++;
             return null;
@@ -87,4 +86,4 @@ module.exports = class Cache {
     size() {
         return this.size;
     }
-}
+};

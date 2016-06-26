@@ -39,23 +39,23 @@ function main() {
 
 function task() {
     //In case of multiple task running at the same time
-    if (isRunning) {
-        return;
+    if (!isRunning) {
+        if (Utils.isStartTime(startTime)) {
+            Logger.info('Not the start time.');
+            setTimeout(task, Config.CHECK_INTERVAL);
 
-    } else if (Utils.isStartTime(startTime)) {
-        Logger.info('Not the start time.');
-        setTimeout(task, Config.CHECK_INTERVAL);
-
-    } else {
-        Logger.info('startTime' + startTime);
-        isRunning = true;
-        crawlJob();
+        } else {
+            Logger.info('startTime' + startTime);
+            isRunning = true;
+            crawlJob();
+        }
     }
 }
 
 function crawlJob() {
     let crawlTask = new Crawl();
     crawlTask.start().then(() => {
+        Logger.info('crawl finished');
         startTime = Utils.getNextStartTime(startTime);
         isRunning = false;
         rejectNum = 0;

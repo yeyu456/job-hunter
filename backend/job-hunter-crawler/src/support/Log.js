@@ -52,9 +52,6 @@ module.exports = class Logger {
     }
 
     static _record(logPath, content) {
-        console.log(content);
-        return;
-
         if (!logPath || logPath === '') {
             throw new LogFileError('Illegal log path', logPath);
         }
@@ -74,7 +71,9 @@ module.exports = class Logger {
 
     static _write2File(logPath, content) {
         fs.appendFile(logPath, content, 'utf8', (err) => {
-            throw new LogFileError(err, logPath + ' ' + content);
+            if (err) {
+                throw new LogFileError(err, logPath + ' ' + content);
+            }
         });
     }
 
@@ -98,4 +97,4 @@ module.exports = class Logger {
     static _email(content) {
         //TODO send email
     }
-}
+};

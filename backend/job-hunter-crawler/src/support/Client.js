@@ -29,9 +29,9 @@ module.exports = class Client {
         });
     }
 
-    static post(url, headers, data, agent = null) {
+    static post(url, proxy, headers, data, agent = null) {
         let op = {
-            proxy: 'http://112.65.200.211',
+            proxy: proxy.url,
             url: url,
             headers: headers,
             form: data,
@@ -55,4 +55,4 @@ module.exports = class Client {
             });
         });
     }
-}
+};

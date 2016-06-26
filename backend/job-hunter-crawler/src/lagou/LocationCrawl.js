@@ -2,15 +2,15 @@ const mongoose = require('mongoose');
 const urlencode = require('urlencode');
 const cheerio = require('cheerio');
 
-require('./model/TaskModel.js');
-const Database = require('./db/Database.js');
-const Client = require('./support/Client');
-const Utils = require('./support/Utils.js');
-const Logger = require('./support/Log.js');
-const LocationError = require('./exception/LocationError.js');
-const DataBaseError = require('./exception/DatabaseError.js');
-const HttpError = require('./exception/HttpError.js');
-const Config = require('./config.js');
+require('./../model/TaskModel.js');
+const Database = require('./../db/Database.js');
+const Client = require('./../support/Client');
+const Utils = require('./../support/Utils.js');
+const Logger = require('./../support/Log.js');
+const LocationError = require('./../exception/LocationError.js');
+const DataBaseError = require('./../exception/DatabaseError.js');
+const HttpError = require('./../exception/HttpError.js');
+const CrawlConfig = require('./../crawl.config.js');
 
 function main() {
     Database.connect().then(getTask).then(() => {
@@ -19,12 +19,12 @@ function main() {
 }
 
 function getTask() {
-    let headers = JSON.parse(Config.DEFAULT_LAGOU_GET_HEADERS);
+    let headers = JSON.parse(CrawlConfig.DEFAULT_LAGOU_GET_HEADERS);
     headers['User-Agent'] = Utils.getUserAgent();
 
     let cityP = [];
-    for (let city of Config.CITIES) {
-        let url = Config.GET_URL + Config.JOB_TYPES[0] + Config.CITY_GET_URL +
+    for (let city of CrawlConfig.CITIES) {
+        let url = CrawlConfig.GET_URL + CrawlConfig.JOB_TYPES[0] + CrawlConfig.CITY_GET_URL +
             urlencode.encode(city, 'utf8');
 
         let cp = Client.get(url, headers).then((body) => {
@@ -32,7 +32,7 @@ function getTask() {
             let dists = getAreas(body, '.detail-district-area a');
             let distP = [];
             for (let dist of dists) {
-                let distUrl = url + Config.DISTRICT_GET_URL +
+                let distUrl = url + CrawlConfig.DISTRICT_GET_URL +
                     urlencode.encode(dist, 'utf8');
 
                 let dp = Client.get(distUrl, headers).then((body) => {
@@ -76,7 +76,7 @@ function saveTasks(city, dist, zones) {
     Logger.debug([].concat('save tasks', city, dist, zones));
     let models = [];
     for (let zone of zones) {
-        for (let job of Config.JOB_TYPES) {
+        for (let job of CrawlConfig.JOB_TYPES) {
             models.push({
                 job: job,
                 city: city,

@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const async = require('async');
 
 const Config = require('./../config.js');
+const CrawlConfig = require('./../crawl.config.js');
 const ProxyManager = require('./../proxy/ProxyManager.js');
 const Bridge = require('./../phantomjs/Bridge.js');
 const Utils = require('./../support/Utils.js');
@@ -54,7 +55,7 @@ module.exports = class JobCrawl {
         mongoose.model('TaskModel').find().sort({
             city:1,
             job:1
-        }).limit(4).exec((error, docs) => {
+        }).limit(30).exec((error, docs) => {
             if (error || docs.length === 0) {
                 error = error ? new DatabaseError(error) : new DatabaseError('Cannot find any tasks');
                 Logger.error(error);
@@ -93,8 +94,8 @@ module.exports = class JobCrawl {
 
     _task(param, cb) {
         let proxy = this.proxyManager.getProxy();
+        this._emulate(param.task, proxy);
         setTimeout(() => {
-            this._emulate(param.task, proxy);
             this._initTask(param.task, proxy, param.order).then(() => {
                 cb();
 
@@ -104,11 +105,11 @@ module.exports = class JobCrawl {
         }, Config.TASK_INTERVAL * 5);
     }
 
-    _initTask(task, proxy, order) {
+    _initTask(task, proxy) {
         return new Promise((resolve, reject) => {
             if (Utils.isSameDay(task.updated, new Date())) {
                 //No need to crawl max page num again while updated today
-                if (task.maxNum > 1) {
+                if (task.startNum > task.maxNum) {
                     resolve();
                     return;
                 }
@@ -118,13 +119,11 @@ module.exports = class JobCrawl {
                     task.startNum = 1;
                 }
             }
-            setTimeout(this._onTask.bind(this, task, proxy, resolve, reject),
-                this.interval * order);
+            this._onTask(task, proxy, resolve, reject);
         });
     }
 
-    _onTask(task, resolve, reject) {
-        console.log(task);
+    _onTask(task, proxy, resolve, reject) {
         async.whilst(
             () => {
                 Logger.debug(`zone ${task.zone}:${task.startNum}/${task.maxNum}`);
@@ -132,13 +131,15 @@ module.exports = class JobCrawl {
             },
             (cb) => {
                 async.waterfall([
-                    this._network.bind(this, task),
+                    this._network.bind(this, task, proxy),
                     this._save.bind(this)
 
                 ], (err) => {
                     if (err) {
                         Logger.debug('Failed task:' + JSON.stringify(task));
                         cb(err);
+                    } else {
+                        cb();
                     }
                 });
             },
@@ -155,20 +156,20 @@ module.exports = class JobCrawl {
 
     }
 
-    _network(task, cb) {
+    _network(task, proxy, cb) {
         Logger.debug('network ' + task.zone);
         let startPageNum = task.startNum;
-        let url = Config.CITY_URL + Config.CITY_GET_URL + urlencode.encode(task.city, 'utf8') +
-            Config.DISTRICT_GET_URL + urlencode.encode(task.dist, 'utf8') +
-            Config.ZONE_GET_URL + urlencode(task.zone, 'utf8') + Config.CITY_URL_POSTFIX;
-        let options = JSON.parse(Config.DEFAULT_LAGOU_POST_HEADERS);
+        let url = CrawlConfig.CITY_URL + CrawlConfig.CITY_GET_URL + urlencode.encode(task.city, 'utf8') +
+            CrawlConfig.DISTRICT_GET_URL + urlencode.encode(task.dist, 'utf8') +
+            CrawlConfig.ZONE_GET_URL + urlencode(task.zone, 'utf8') + CrawlConfig.CITY_URL_POSTFIX;
+        let options = JSON.parse(CrawlConfig.DEFAULT_LAGOU_POST_HEADERS);
         let data = {
             first : false,
             pn : startPageNum,
             kd : task.job
         };
 
-        Client.post(url, options, data).then((data) => {
+        Client.post(url, proxy, options, data).then((data) => {
             data = JSON.parse(data);
             if (Utils.isNotValidData(data)) {
                 throw new StructError('!!!data structure changed!!!', JSON.stringify(data));
@@ -178,10 +179,10 @@ module.exports = class JobCrawl {
 
             } else {
                 console.log('total count' + data['content']['positionResult']['totalCount']);
-                console.log('page size' + data['content']['positionResult']['pageSize']);
+                console.log('page size' + data['content']['pageSize']);
                 let maxNum = Utils.getMaxPageNum(
                     data['content']['positionResult']['totalCount'],
-                    data['content']['positionResult']['pageSize']
+                    data['content']['pageSize']
                 );
                 console.log('maxnum '+ maxNum);
                 
@@ -260,7 +261,7 @@ module.exports = class JobCrawl {
                 task.startNum++;
                 mongoose.model('TaskModel').update({ _id: task._id }, task, (err) => {
                     if (err) {
-                        Logger.error(err);
+                        Logger.error(err, '2');
                         cb(new DatabaseError(err));
 
                     } else {
@@ -269,7 +270,7 @@ module.exports = class JobCrawl {
                     }
                 });
             }).catch((err) => {
-                Logger.error(err);
+                Logger.error(new DatabaseError(err), '1');
                 cb(new DatabaseError(err));
             });
         }

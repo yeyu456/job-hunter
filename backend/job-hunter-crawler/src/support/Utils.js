@@ -1,8 +1,9 @@
 const urlencode = require('urlencode');
 const Config = require('./../config.js');
+const CrawlConfig = require('./../crawl.config.js');
 
 function getUserAgent() {
-    return Config.USER_AGENTS[0];
+    return CrawlConfig.USER_AGENTS[0];
 }
 
 function getStartTime(date = new Date()) {
@@ -53,9 +54,9 @@ function isValidIP(ip) {
 function isNotValidData(data) {
     return !data ||
         !data['content'] ||
+        (!data['content']['pageSize'] && data['content']['pageSize'] !== 0) ||
         !data['content']['positionResult'] ||
         (!data['content']['positionResult']['totalCount'] && data['content']['positionResult']['totalCount'] !== 0) ||
-        (!data['content']['positionResult']['pageSize'] && data['content']['positionResult']['pageSize'] !== 0)  ||
         !data['content']['positionResult']['result'];
 }
 
@@ -69,4 +70,4 @@ module.exports = {
     getRandomInt: getRandomInt,
     isValidIP: isValidIP,
     isNotValidData: isNotValidData
-}
+};
