@@ -11,28 +11,26 @@ const PhantomError = require('./../exception/PhantomError.js');
 module.exports = class Bridge {
 
     start() {
-        this.queue = [];
         this._initBridge();
     }
 
     push(task, proxy) {
-        this.queue.push({
-            city: task.city,
-            dist: task.dist,
-            zone: task.zone,
-            job: task.job,
-            proxyIP: proxy.ip,
-            proxyPort: proxy.port,
-            proxyType: proxy.type,
-            useragent: proxy.useragent
-        });
+        Logger.debug('bridge', JSON.stringify(task));
         if (this.ws.clients.length > 0) {
-            let data = this.queue.shift();
+            let data = {
+                city: task.city,
+                dist: task.dist,
+                zone: task.zone,
+                job: task.job,
+                proxyIP: proxy.ip,
+                proxyPort: proxy.port,
+                proxyType: proxy.type,
+                useragent: proxy.useragent
+            };
             try {
                 this.ws.clients[0].send(JSON.stringify(data));
             } catch (e) {
                 Logger.error(new PhantomError(e, 'Error occurred when push new bridge task.'));
-                this.queue.push(data);
             }
         }
     }
@@ -42,9 +40,19 @@ module.exports = class Bridge {
         this.ws = new ws.Server({port : 8080});
         this.ws.on('connection', (client) => {
             client.on('error', this._onClientError.bind(this));
+            client.on('message', (msg) => {
+                try {
+                    msg = JSON.parse(msg);
+                    if (msg.error) {
+                        Logger.error(new PhantomError(msg.error));
+                    }
+                } catch (e) {
+                    Logger.error(new PhantomError(e));
+                }
+            });
         });
         this.ws.on('error', this._onServerError.bind(this));
-        this._initPhantom();
+        //this._initPhantom();
     }
 
     _initPhantom() {

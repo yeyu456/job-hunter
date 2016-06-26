@@ -3,7 +3,8 @@ const Config = {
     //****************** CRAWL ******************//
 
     USER_AGENTS: [
-        'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.84 Safari/537.36'],
+        'Trident/7.0; .NET4.0C; .NET4.0E; .NET CLR 2.0.50727; .NET CLR 3.0.30729; .NET CLR 3.5.30729; InfoPath.3; rv:11.0) like Gecko',
+        'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2704.84 Safari/537.36'],
 
     MOBILE_USER_AGENTS: [
         'Mozilla/5.0 (Linux; Android 5.1.1; Nexus 5 Build/LMY48B; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/43.0.2357.65 Mobile Safari/537.36',
@@ -16,7 +17,7 @@ const Config = {
 
     DEFAULT_LAGOU_POST_HEADERS: JSON.stringify({
         'Accept': 'application/json, text/javascript, */*; q=0.01',
-        'Accept-Encoding': 'gzip, deflate',
+        'Accept-Encoding': '',
         'Accept-Language': 'zh-CN,zh,q:0.8,en,q:0.6,ja,q:0.4,ko,q:0.2,zh-TW,q:0.2',
         'Cache-Control': 'no-cache',
         'X-Anit-Forge-Code': 0,
@@ -82,13 +83,11 @@ const Config = {
 
     //****************** TASK ******************//
 
-    CONCURRENT_TASK_NUM: 3,
+    CONCURRENT_TASK_NUM: 2,
 
-    TASK_INTERVAL: 3 * 1000, //2s
+    TASK_INTERVAL: 1 * 1000, //2s
 
     CRAWL_CONTINGENCY_PLAN_TRESHOLD: 3,
-
-    EVENT_SEED: 'seed',
 
     EVENT_EMULATE: 'emulate',
 
@@ -134,7 +133,7 @@ const Config = {
         FATAL: 3
     },
 
-    LOG_LEVEL: 0, //LOG_TYPE
+    LOG_LEVEL: -1, //LOG_TYPE
 
 
 

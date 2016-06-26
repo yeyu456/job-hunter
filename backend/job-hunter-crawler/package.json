@@ -13,7 +13,8 @@
         "nodemailer": "^2.4.2",
         "mkdirp": "^0.5.1",
         "mongoose": "^4.5.0",
-        "phantomjs-prebuilt": "^2.1.7"
+        "phantomjs-prebuilt": "^2.1.7",
+        "async": "^2.0.0-rc.6"
     },
     "devDependencies": {
         "eslint":"^2.12.0"

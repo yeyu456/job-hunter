@@ -50,6 +50,15 @@ function isValidIP(ip) {
     return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ip);
 }
 
+function isNotValidData(data) {
+    return !data ||
+        !data['content'] ||
+        !data['content']['positionResult'] ||
+        (!data['content']['positionResult']['totalCount'] && data['content']['positionResult']['totalCount'] !== 0) ||
+        (!data['content']['positionResult']['pageSize'] && data['content']['positionResult']['pageSize'] !== 0)  ||
+        !data['content']['positionResult']['result'];
+}
+
 module.exports = {
     getUserAgent: getUserAgent,
     getStartTime: getStartTime,
@@ -58,5 +67,6 @@ module.exports = {
     isSameDay: isSameDay,
     getMaxPageNum: getMaxPageNum,
     getRandomInt: getRandomInt,
-    isValidIP: isValidIP
+    isValidIP: isValidIP,
+    isNotValidData: isNotValidData
 }

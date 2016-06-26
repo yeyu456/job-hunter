@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const Logger = require('./../support/log.js');
-const SCHEMA_OPTIONS = require('./../config.js').SCHEMA_OPTIONS;
 const DatabaseError = require('./../exception/DatabaseError.js');
+const SCHEMA_OPTIONS = require('./../config.js').SCHEMA_OPTIONS;
 
 const JobSchema = new mongoose.Schema({
     id: {
@@ -55,10 +55,9 @@ JobSchema.index({id: 1, companyId: 1}, {unique: true});
 
 JobSchema.statics.insertIfNotExist = function _insertIfNotExist(models) {
     let ps = [];
-    let jobModel = new this();
     for (let m of models) {
         let p = new Promise((resolve) => {
-            this.findOne({id: m.id}).exec((err, job) => {
+            JobModel.findOne({id: m.id}).exec((err, job) => {
                 if (err) {
                     throw new DatabaseError(err, `Cannot query job with id ${m.id}`);
                 } else if (job !== null){
@@ -66,9 +65,10 @@ JobSchema.statics.insertIfNotExist = function _insertIfNotExist(models) {
                     resolve();
 
                 } else {
-                    jobModel.save(m, (err, job) => {
+                    let jobModel = new JobModel(m);
+                    jobModel.save((err, job) => {
                         if (err) {
-                            console.log(m);
+                            console.log(jobModel);
                             throw new DatabaseError(err, `Cannot create job with id ${m.id}`);
                         } else {
                             resolve();

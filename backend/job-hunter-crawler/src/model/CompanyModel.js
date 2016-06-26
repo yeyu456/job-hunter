@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const Logger = require('./../support/log.js');
+const DatabaseError = require('./../exception/DatabaseError.js');
 const SCHEMA_OPTIONS = require('./../config.js').SCHEMA_OPTIONS;
 
 const CompanySchema = new mongoose.Schema({
@@ -22,10 +23,9 @@ const CompanySchema = new mongoose.Schema({
 
 CompanySchema.statics.insertIfNotExist = function _insertIfNotExist(models) {
     let ps = [];
-    let companyModel = new this();
     for (let m of models) {
         let p = new Promise((resolve) => {
-            this.findOne({id: m.id}).exec((err, company) => {
+            CompanyModel.findOne({id: m.id}).exec((err, company) => {
                 if (err) {
                     throw new DatabaseError(err, `Cannot query company with id ${m.id}`);
                 } else if (company !== null){
@@ -33,7 +33,8 @@ CompanySchema.statics.insertIfNotExist = function _insertIfNotExist(models) {
                     resolve();
 
                 } else {
-                    companyModel.save(m, (err, company) => {
+                    let companyModel = new CompanyModel(m);
+                    companyModel.save((err, company) => {
                         if (err) {
                             throw new DatabaseError(err, `Cannot create company with id ${m.id}`);
                         } else {

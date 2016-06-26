@@ -2,6 +2,7 @@ const EventEmitter = require('events');
 
 const urlencode = require('urlencode');
 const mongoose = require('mongoose');
+const async = require('async');
 
 const Config = require('./../config.js');
 const ProxyManager = require('./../proxy/ProxyManager.js');
@@ -14,22 +15,20 @@ const Cache = require('./../db/Cache.js');
 const StructError = require('./../exception/StructError.js');
 const JobDataError = require('./../exception/JobDataError.js');
 const DatabaseError = require('./../exception/DatabaseError.js');
+const HttpError = require('./../exception/HttpError.js');
 
 module.exports = class JobCrawl {
 
     constructor() {
+        this._initBridge();
         this.proxyManager = new ProxyManager();
         this.interval = Config.TASK_INTERVAL;
         this.failedNum = 0;
-        this.curJobTask = 0;
         this._initEvent();
-        this._initBridge();
     }
 
     _initEvent() {
         this.jobEvent = new EventEmitter();
-        this.jobEvent.on(Config.EVENT_SEED, this._seed.bind(this));
-        this.jobEvent.on(Config.EVENT_EMULATE, this._emulate.bind(this));
     }
 
     _initBridge() {
@@ -38,8 +37,8 @@ module.exports = class JobCrawl {
     }
 
     start() {
-        this.jobEvent.emit(Config.EVENT_SEED);
         return new Promise((resolve, reject) => {
+            this._seed();
             this.jobEvent.on(Config.EVENT_END, (error) => {
                 if (error) {
                     reject(error);
@@ -50,17 +49,12 @@ module.exports = class JobCrawl {
         });
     }
 
-    end() {
-        Logger.info('job crawl end');
-    }
-
     _seed() {
         this.seedTasks = [];
-        this.failedTasks = [];
         mongoose.model('TaskModel').find().sort({
             city:1,
             job:1
-        }).limit(3).exec((error, docs) => {
+        }).limit(4).exec((error, docs) => {
             if (error || docs.length === 0) {
                 error = error ? new DatabaseError(error) : new DatabaseError('Cannot find any tasks');
                 Logger.error(error);
@@ -76,211 +70,208 @@ module.exports = class JobCrawl {
         if (this.seedTasks.length === 0) {
             return;
         }
+        let queue = async.queue(this._task.bind(this), Config.CONCURRENT_TASK_NUM);
+        queue.drain = () => {
+            this.jobEvent.emit(Config.EVENT_END);
+        };
+        for (let i= this.seedTasks.length;i>0;i--) {
+            let task = this.seedTasks.pop();
+            queue.push({task:task, order:i}, (error) => {
+                if (error) {
+                    Logger.error(new JobDataError(error,
+                        `crawl task ${task.city}/${task.dist}/${task.zone} failed with page no ${task.startNum}`));
+                } else {
+                    Logger.debug(`finish task ${task.city}/${task.dist}/${task.zone}`);
+                }
+            });
+        }
     }
 
     _emulate(task, proxy) {
         this.bridge.push(task, proxy);
     }
 
-    _task(task, cb) {
+    _task(param, cb) {
+        let proxy = this.proxyManager.getProxy();
+        setTimeout(() => {
+            this._emulate(param.task, proxy);
+            this._initTask(param.task, proxy, param.order).then(() => {
+                cb();
 
+            }).catch((err) => {
+                cb(err);
+            });
+        }, Config.TASK_INTERVAL * 5);
     }
 
-    _initSeedTasks() {
-        let tasks = [];
-        //remove finished task
-        this.seedTasks = this.seedTasks.filter((v) => {
-            return !Utils.isSameDay(v.updated, new Date()) ||
-                v.maxNum <= 1 ||
-                v.startNum <= v.maxNum;
-        });
-        for (let index in this.seedTasks) {
-            if (Utils.isSameDay(this.seedTasks[index].updated, new Date())) {
+    _initTask(task, proxy, order) {
+        return new Promise((resolve, reject) => {
+            if (Utils.isSameDay(task.updated, new Date())) {
                 //No need to crawl max page num again while updated today
-                if (this.seedTasks[index].maxNum > 1) {
-                    continue;
+                if (task.maxNum > 1) {
+                    resolve();
+                    return;
                 }
-
             } else {
                 //Reset start page num of yesterday
-                if (this.seedTasks[index].startNum > 1) {
-                    this.seedTasks[index].startNum = 1;
+                if (task.startNum > 1) {
+                    task.startNum = 1;
                 }
             }
-            let p = new Promise((resolve, reject) => {
-                setTimeout(this._onTask.bind(this, index, resolve, reject),
-                    this.interval * index);
-            });
-            tasks.push(p);
-        }
-        return Promise.all(tasks);
-    }
-
-    _jobTask() {
-        for(let i=0;i<Config.CONCURRENT_TASK_NUM;i++) {
-            this.curJobTask++;
-            setTimeout(this._startNewTask.bind(this, i),
-                this.interval * i);
-        }
-        return new Promise((resolve, reject) => {
-            this.jobEvent.on('endJobTask', (i) => {
-                if (this.curJobTask > 0) {
-                    Logger.debug(`finsih job task ${i}`);
-                }
-                resolve();
-            });
+            setTimeout(this._onTask.bind(this, task, proxy, resolve, reject),
+                this.interval * order);
         });
     }
 
-    _startNewTask(id){
-        Logger.debug('start new task ' + id);
-        let index;
-        let moreDelay = 0;
-        if (this.seedTasks.length === 0) {
-            if (this.failedTasks.length !== 0) {
-                this.seedTasks.push(this.failedTasks.pop());
-                index = 0;
-                moreDelay += this.interval * this.failedTasks.length;
+    _onTask(task, resolve, reject) {
+        console.log(task);
+        async.whilst(
+            () => {
+                Logger.debug(`zone ${task.zone}:${task.startNum}/${task.maxNum}`);
+                return task.startNum <= task.maxNum;
+            },
+            (cb) => {
+                async.waterfall([
+                    this._network.bind(this, task),
+                    this._save.bind(this)
 
-            } else {
-                this._endNewTask(id);
-                return;
+                ], (err) => {
+                    if (err) {
+                        Logger.debug('Failed task:' + JSON.stringify(task));
+                        cb(err);
+                    }
+                });
+            },
+            (err) => {
+                if (err) {
+                    Logger.debug('Failed task:' + JSON.stringify(task));
+                    reject(err);
+                } else {
+                    Logger.debug('Finished task:' + JSON.stringify(task));
+                    resolve();
+                }
             }
-        } else {
-            index = Utils.getRandomInt(0, this.seedTasks.length);
-        }
-        this._onTask(index, () => {
-            setTimeout(this._startNewTask.bind(this, id),
-                this.interval * id + moreDelay);
+        );
 
-        }, () => {
-            this._endNewTask(id);
-        });
     }
 
-    _endNewTask(id) {
-        this.curJobTask--;
-        this.jobEvent.emit('endJobTask', id);
-    }
-
-    _onTask(taskIndex, resolve, reject) {
-        if (!this.seedTasks[taskIndex]) {
-            Logger.error(new Error('No such task with index ' + taskIndex + ' len:' + this.seedTasks.length));
-            resolve();
-            return;
-        }
-
-        //remove in case of another call
-        let task = this.seedTasks.splice(taskIndex, 1)[0];
-
+    _network(task, cb) {
+        Logger.debug('network ' + task.zone);
         let startPageNum = task.startNum;
         let url = Config.CITY_URL + Config.CITY_GET_URL + urlencode.encode(task.city, 'utf8') +
             Config.DISTRICT_GET_URL + urlencode.encode(task.dist, 'utf8') +
-            Config.ZONE_GET_URL + urlencode(task.zone, 'utf8') + Config.CITY_URL_POSTFIX
+            Config.ZONE_GET_URL + urlencode(task.zone, 'utf8') + Config.CITY_URL_POSTFIX;
         let options = JSON.parse(Config.DEFAULT_LAGOU_POST_HEADERS);
         let data = {
             first : false,
             pn : startPageNum,
             kd : task.job
         };
+
         Client.post(url, options, data).then((data) => {
             data = JSON.parse(data);
-            if (this._isNotValidData(data)) {
+            if (Utils.isNotValidData(data)) {
                 throw new StructError('!!!data structure changed!!!', JSON.stringify(data));
 
             } else if (parseInt(data['content']['pageNo']) !== startPageNum) {
-                throw new JobDataError(`Unmatched page number ${startPageNum}-${data.content.pageNo}`);
+                throw new JobDataError(`Unmatched page number ${startPageNum}-${data.content.pageNo} ${task.city}/${task.dist}/${task.zone} ${task.job} `);
 
             } else {
-                this._save(data['content']['positionResult']['result'], task)
-                .then(() => {
-                    resolve();
-                });
+                console.log('total count' + data['content']['positionResult']['totalCount']);
+                console.log('page size' + data['content']['positionResult']['pageSize']);
+                let maxNum = Utils.getMaxPageNum(
+                    data['content']['positionResult']['totalCount'],
+                    data['content']['positionResult']['pageSize']
+                );
+                console.log('maxnum '+ maxNum);
+                
+                cb(null, data['content']['positionResult']['result'], task, maxNum);
             }
 
         }).catch((err) => {
-            Logger.error(err);
             this.failedNum++;
-            if (this.failedNum > Config.CRAWL_CONTINGENCY_PLAN_TRESHOLD) {
-                this.jobEvent.emit('cp');
-                this.failedNum = 0;
-            }
-            this.seedTasks.push(task);
-            resolve();
+            Logger.error(new HttpError(err, 'failed time ' + this.failedNum));
+            cb(new HttpError(err));
         });
     }
 
-    _isNotValidData(data) {
-        return !data ||
-            !data['content'] ||
-            !data['content']['positionResult'] ||
-            !data['content']['positionResult']['totalCount'] ||
-            !data['content']['positionResult']['pageSize'] ||
-            !data['content']['positionResult']['result'];
-    }
+    _save(jobs, task, maxNum, cb) {
+        Logger.debug('save ' + task.zone);
+        if (jobs.length === 0) {
+            Logger.error(new JobDataError('No job data.'));
+            mongoose.model('TaskModel').update({ _id: task._id }, task, (err) => {
+                if (err) {
+                    Logger.error(err);
+                    cb(new DatabaseError(err));
 
-    _save(jobs, task) {
-        if (jobs.length <= 0) {
-            return;
-        }
-        let jobModels = [];
-        let companyModels = [];
-        for (let job of jobs) {
-            if (job.city !== task.city || job.district !== task.dist) {
-                Logger.error(new JobDataError(
-                    `Not matched job id ${job.positionId} with location ${job.city}-${job.district} / ${city}-${dist}-${zone}`));
-                jobModels.push({
-                    id: job.positionId,
-                    companyId: job.companyId,
-                    name: job.positionName,
-                    salary: job.salary,
-                    education: job.education,
-                    year: job.workYear,
-                    created: job.createTimeSort,
-                    city: job.city,
-                    dist: job.district,
-                    zone: '-'
-                });
+                } else {
+                    Logger.debug('finished saved task ' + task.zone);
+                    cb();
+                }
+            });
 
-            } else {
-                jobModels.push({
-                    id: job.positionId,
-                    companyId: job.companyId,
-                    name: job.positionName,
-                    salary: job.salary,
-                    education: job.education,
-                    year: job.workYear,
-                    created: job.createTimeSort,
-                    city: task.city,
-                    dist: task.dist,
-                    zone: task.zone
+        } else {
+            let jobModels = [];
+            let companyModels = [];
+            for (let job of jobs) {
+                if (job.city !== task.city || job.district !== task.dist) {
+                    Logger.error(new JobDataError(
+                        `Not matched job id ${job.positionId} with location ${job.city}-${job.district} / ${city}-${dist}-${zone}`));
+                    jobModels.push({
+                        id: job.positionId,
+                        companyId: job.companyId,
+                        name: job.positionName,
+                        salary: job.salary,
+                        education: job.education,
+                        year: job.workYear,
+                        created: job.createTimeSort,
+                        city: job.city,
+                        dist: job.district,
+                        zone: task.zone
+                    });
+
+                } else {
+                    jobModels.push({
+                        id: job.positionId,
+                        companyId: job.companyId,
+                        name: job.positionName,
+                        salary: job.salary,
+                        education: job.education,
+                        year: job.workYear,
+                        created: job.createTimeSort,
+                        city: task.city,
+                        dist: task.dist,
+                        zone: task.zone
+                    });
+                }
+                companyModels.push({
+                    id: job.companyId,
+                    name: job.companyShortName,
+                    field: job.industryField
                 });
             }
-            companyModels.push({
-                id: job.companyId,
-                name: job.companyShortName,
-                field: job.industryField
-            });
-        }
-        let p = mongoose.model('JobModel').insertIfNotExist(jobModels).then(() => {
-            return mongoose.model('CompanyModel').insertIfNotExist(companyModels);
+            mongoose.model('JobModel').insertIfNotExist(jobModels).then(() => {
+                Logger.debug('finished saved job ' + task.zone);
+                return mongoose.model('CompanyModel').insertIfNotExist(companyModels);
 
-        }).then(() => {
-            task.maxNum = Utils.getMaxPageNum(
-                data['content']['positionResult']['totalCount'],
-                data['content']['positionResult']['pageSize']
-            );
-            task.startNum++;
-            return new Promise((resolve, reject) => {
+            }).then(() => {
+                Logger.debug('finished saved company ' + task.zone);
+                task.maxNum = maxNum;
+                task.startNum++;
                 mongoose.model('TaskModel').update({ _id: task._id }, task, (err) => {
                     if (err) {
-                        reject(err);
+                        Logger.error(err);
+                        cb(new DatabaseError(err));
+
                     } else {
-                        resolve();
+                        Logger.debug('finished saved task ' + task.zone);
+                        cb();
                     }
                 });
+            }).catch((err) => {
+                Logger.error(err);
+                cb(new DatabaseError(err));
             });
-        });
-        return p;
+        }
     }
 };
