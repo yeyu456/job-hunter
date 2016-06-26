@@ -5,7 +5,9 @@ const Config = {
 
     //****************** TASK ******************//
 
-    CONCURRENT_TASK_NUM: 2,
+    CONCURRENT_TASK_NUM: 3,
+
+    PHANTOM_WARM_UP_TIME: 5000, //5s
 
     TASK_INTERVAL: 1000, //1s
 

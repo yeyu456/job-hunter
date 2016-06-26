@@ -55,7 +55,7 @@ module.exports = class JobCrawl {
         mongoose.model('TaskModel').find().sort({
             city:1,
             job:1
-        }).limit(30).exec((error, docs) => {
+        }).limit(500).exec((error, docs) => {
             if (error || docs.length === 0) {
                 error = error ? new DatabaseError(error) : new DatabaseError('Cannot find any tasks');
                 Logger.error(error);
@@ -93,27 +93,28 @@ module.exports = class JobCrawl {
     }
 
     _task(param, cb) {
-        let proxy = this.proxyManager.getProxy();
-        this._emulate(param.task, proxy);
-        setTimeout(() => {
-            this._initTask(param.task, proxy, param.order).then(() => {
-                cb();
+        //No need to crawl again while updated today
+        if (Utils.isSameDay(param.task.updated, new Date()) && param.task.startNum > param.task.maxNum) {
+            Logger.info(`${param.task.city}/${param.task.dist}/${param.task.zone} already crawled.`);
+            cb();
 
-            }).catch((err) => {
-                cb(err);
-            });
-        }, Config.TASK_INTERVAL * 5);
+        } else {
+            let proxy = this.proxyManager.getProxy();
+            this._emulate(param.task, proxy);
+            setTimeout(() => {
+                this._initTask(param.task, proxy, param.order).then(() => {
+                    cb();
+
+                }).catch((err) => {
+                    cb(err);
+                });
+            }, Config.PHANTOM_WARM_UP_TIME);
+        }
     }
 
     _initTask(task, proxy) {
         return new Promise((resolve, reject) => {
-            if (Utils.isSameDay(task.updated, new Date())) {
-                //No need to crawl max page num again while updated today
-                if (task.startNum > task.maxNum) {
-                    resolve();
-                    return;
-                }
-            } else {
+            if (!Utils.isSameDay(task.updated, new Date())) {
                 //Reset start page num of yesterday
                 if (task.startNum > 1) {
                     task.startNum = 1;
@@ -175,16 +176,16 @@ module.exports = class JobCrawl {
                 throw new StructError('!!!data structure changed!!!', JSON.stringify(data));
 
             } else if (parseInt(data['content']['pageNo']) !== startPageNum) {
-                throw new JobDataError(`Unmatched page number ${startPageNum}-${data.content.pageNo} ${task.city}/${task.dist}/${task.zone} ${task.job} `);
+                throw new JobDataError(`Unmatched page number ${startPageNum}-${data.content.pageNo} ${task.city}/${task.dist}/${task.zone} ${task.job}`);
 
             } else {
-                console.log('total count' + data['content']['positionResult']['totalCount']);
-                console.log('page size' + data['content']['pageSize']);
+                Logger.debug('total count' + data['content']['positionResult']['totalCount']);
+                Logger.debug('page size' + data['content']['pageSize']);
                 let maxNum = Utils.getMaxPageNum(
                     data['content']['positionResult']['totalCount'],
                     data['content']['pageSize']
                 );
-                console.log('maxnum '+ maxNum);
+                Logger.debug('maxnum '+ maxNum);
                 
                 cb(null, data['content']['positionResult']['result'], task, maxNum);
             }
@@ -221,6 +222,7 @@ module.exports = class JobCrawl {
                     jobModels.push({
                         id: job.positionId,
                         companyId: job.companyId,
+                        type: task.job,
                         name: job.positionName,
                         salary: job.salary,
                         education: job.education,
@@ -235,6 +237,7 @@ module.exports = class JobCrawl {
                     jobModels.push({
                         id: job.positionId,
                         companyId: job.companyId,
+                        type: task.job,
                         name: job.positionName,
                         salary: job.salary,
                         education: job.education,

@@ -79,11 +79,11 @@ const CrawlConfig = {
 
     MOBILE_COMPANY_REF: ''
 };
-if (true) {
+if (false) {
     CrawlConfig.DEFAULT_LAGOU_POST_HEADERS['Accept-Encoding'] = '';
 }
 CrawlConfig.DEFAULT_LAGOU_POST_HEADERS = JSON.stringify(CrawlConfig.DEFAULT_LAGOU_POST_HEADERS);
 CrawlConfig.DEFAULT_LAGOU_GET_HEADERS = JSON.stringify(CrawlConfig.DEFAULT_LAGOU_GET_HEADERS);
 CrawlConfig.MOBILE_LAGOU_GET_HEADERS = JSON.stringify(CrawlConfig.MOBILE_LAGOU_GET_HEADERS);
-Object.seal(Config);
+Object.seal(CrawlConfig);
 module.exports = CrawlConfig;
