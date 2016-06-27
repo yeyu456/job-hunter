@@ -2,15 +2,15 @@ const mongoose = require('mongoose');
 const urlencode = require('urlencode');
 const cheerio = require('cheerio');
 
-require('./../model/TaskModel.js');
-const Database = require('./../db/Database.js');
-const Client = require('./../support/Client');
-const Utils = require('./../support/Utils.js');
-const Logger = require('./../support/Log.js');
-const LocationError = require('./../exception/LocationError.js');
-const DataBaseError = require('./../exception/DatabaseError.js');
-const HttpError = require('./../exception/HttpError.js');
-const CrawlConfig = require('./../crawl.config.js');
+require('./../../model/TaskModel.js');
+const Database = require('./../../db/Database.js');
+const CrawlConfig = require('./../../crawl.config.js');
+const Client = require('./../../support/Client');
+const Utils = require('./../../support/Utils.js');
+const Logger = require('./../../support/Log.js');
+const LocationError = require('./../../exception/LocationError.js');
+const DataBaseError = require('./../../exception/DatabaseError.js');
+const HttpError = require('./../../exception/HttpError.js');
 
 function main() {
     Database.connect().then(getTask).then(() => {

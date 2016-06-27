@@ -31,7 +31,7 @@ module.exports = class Logger {
         if (Config.LOG_LEVEL > Config.LOG_TYPE.WARN) {
             return;
         }
-        Logger._record(Config.LOG_PATH, '\n[WARN]' + getLogDate() + err.toString());
+        Logger._record(Config.LOG_PATH, '\n[WARN]' + getLogDate() + Logger._getErrorStack(err));
         if (Config.ENABLE_EMAIL && Config.EMAIL_LOG_LEVEL <= Config.LOG_TYPE.WARN) {
             Logger._email(err.toString());
         }
@@ -41,14 +41,14 @@ module.exports = class Logger {
         if (Config.LOG_LEVEL > Config.LOG_TYPE.ERROR) {
             return;
         }
-        Logger._record(Config.ERROR_PATH, '\n[ERROR]' + err.toString());
+        Logger._record(Config.ERROR_PATH, '\n[ERROR]' + getLogDate() + Logger._getErrorStack(err));
         if (Config.ENABLE_EMAIL && Config.EMAIL_LOG_LEVEL <= Config.LOG_TYPE.ERROR) {
             Logger._email(err.toString());
         }
     }
 
     static fatal(err) {
-        Logger._record(Config.ERROR_PATH, '\n[FATAL]' + err.toString());
+        Logger._record(Config.ERROR_PATH, '\n[FATAL]' + getLogDate() + Logger._getErrorStack(err, true));
         Logger._email(err.toString());
     }
 
@@ -68,6 +68,17 @@ module.exports = class Logger {
                 Logger._write2File(logPath, content)
             }
         });
+    }
+
+    static _getErrorStack(e, isFatal = false) {
+        if (isFatal) {
+            return e.stack;
+
+        } else {
+            return e.stack.split('\n').filter((value, index, array) => {
+                return index <= Config.RECORD_ERROR_STACK_DEPTH;
+            }).join('\n');
+        }
     }
 
     static _write2File(logPath, content) {

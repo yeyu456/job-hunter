@@ -59,6 +59,8 @@ const Config = {
 
     LOG_LEVEL: -1, //LOG_TYPE
 
+    RECORD_ERROR_STACK_DEPTH: 5,
+
 
 
     //****************** CACHE ******************//

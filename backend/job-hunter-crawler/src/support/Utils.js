@@ -66,6 +66,10 @@ function isNotValidData(data) {
         !data['content']['positionResult']['result'];
 }
 
+function isValidProxyType(type) {
+    return type && (type.toLowerCase() === 'http' || type.toLowerCase() === 'https');
+}
+
 module.exports = {
     getUserAgent: getUserAgent,
     getLogDate: getLogDate,
@@ -76,5 +80,6 @@ module.exports = {
     getMaxPageNum: getMaxPageNum,
     getRandomInt: getRandomInt,
     isValidIP: isValidIP,
-    isNotValidData: isNotValidData
+    isNotValidData: isNotValidData,
+    isValidProxyType: isValidProxyType
 };

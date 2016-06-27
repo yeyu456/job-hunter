@@ -4,19 +4,19 @@ const urlencode = require('urlencode');
 const mongoose = require('mongoose');
 const async = require('async');
 
-const Config = require('./../config.js');
-const CrawlConfig = require('./../crawl.config.js');
-const ProxyManager = require('./../proxy/ProxyManager.js');
-const Bridge = require('./../phantomjs/Bridge.js');
-const Utils = require('./../support/Utils.js');
-const Logger = require('./../support/Log.js');
-const Client = require('./../support/Client.js');
-const Cache = require('./../db/Cache.js');
+const Config = require('./../../config.js');
+const CrawlConfig = require('./../../crawl.config.js');
+const ProxyManager = require('./../../proxy/ProxyManager.js');
+const Bridge = require('./../../phantomjs/Bridge.js');
+const Utils = require('./../../support/Utils.js');
+const Logger = require('./../../support/Log.js');
+const Client = require('./../../support/Client.js');
+const Cache = require('./../../db/Cache.js');
 
-const StructError = require('./../exception/StructError.js');
-const JobDataError = require('./../exception/JobDataError.js');
-const DatabaseError = require('./../exception/DatabaseError.js');
-const HttpError = require('./../exception/HttpError.js');
+const StructError = require('./../../exception/StructError.js');
+const JobDataError = require('./../../exception/JobDataError.js');
+const DatabaseError = require('./../../exception/DatabaseError.js');
+const HttpError = require('./../../exception/HttpError.js');
 
 module.exports = class JobCrawl {
 
@@ -115,10 +115,9 @@ module.exports = class JobCrawl {
     _initTask(task, proxy) {
         return new Promise((resolve, reject) => {
             if (!Utils.isSameDay(task.updated, new Date())) {
-                //Reset start page num of yesterday
-                if (task.startNum > 1) {
-                    task.startNum = 1;
-                }
+                //Reset page num of yesterday
+                task.startNum = 1;
+                task.maxNum = 1;
             }
             this._onTask(task, proxy, resolve, reject);
         });
@@ -170,13 +169,15 @@ module.exports = class JobCrawl {
             kd : task.job
         };
 
-        Client.post(url, proxy, options, data).then((data) => {
+        Client.post(url, options, data, proxy).then((data) => {
             data = JSON.parse(data);
             if (Utils.isNotValidData(data)) {
                 throw new StructError('!!!data structure changed!!!', JSON.stringify(data));
 
             } else if (parseInt(data['content']['pageNo']) !== startPageNum) {
-                throw new JobDataError(`Unmatched page number ${startPageNum}-${data.content.pageNo} ${task.city}/${task.dist}/${task.zone} ${task.job}`);
+                Logger.warn(new JobDataError(
+                    `Unmatched page number ${startPageNum}-${data.content.pageNo} ${task.city}/${task.dist}/${task.zone} ${task.job}`));
+                cb(null, [], task, startPageNum);
 
             } else {
                 Logger.debug('total count' + data['content']['positionResult']['totalCount']);
@@ -200,7 +201,7 @@ module.exports = class JobCrawl {
     _save(jobs, task, maxNum, cb) {
         Logger.debug('save ' + task.zone);
         if (jobs.length === 0) {
-            Logger.error(new JobDataError('No job data.'));
+            Logger.warn(new JobDataError('No job data.'));
             mongoose.model('TaskModel').update({ _id: task._id }, task, (err) => {
                 if (err) {
                     Logger.error(err);

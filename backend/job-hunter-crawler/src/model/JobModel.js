@@ -72,7 +72,6 @@ JobSchema.statics.insertIfNotExist = function _insertIfNotExist(models) {
                     let jobModel = new JobModel(m);
                     jobModel.save((err, job) => {
                         if (err) {
-                            console.log(jobModel);
                             throw new DatabaseError(err, `Cannot create job with id ${m.id}`);
                         } else {
                             resolve();

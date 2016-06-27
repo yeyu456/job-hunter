@@ -1,6 +1,6 @@
 const Utils = require('./support/Utils.js');
 const Logger = require('./support/Log.js');
-const Crawl = require('./lagou/Crawl.js');
+const Crawl = require('./crawl/Crawl.js');
 const Database = require('./db/Database.js');
 const Config = require('./config.js');
 
@@ -41,11 +41,11 @@ function task() {
     //In case of multiple task running at the same time
     if (!isRunning) {
         if (Utils.isStartTime(startTime)) {
-            Logger.info('Not the start time.');
+            Logger.debug('Not the start time.');
             setTimeout(task, Config.CHECK_INTERVAL);
 
         } else {
-            Logger.info('startTime' + startTime);
+            Logger.info('startTime' + new Date(startTime));
             isRunning = true;
             crawlJob();
         }
@@ -68,6 +68,7 @@ function crawlJob() {
             process.exit(1);
 
         } else {
+            Logger.warn('Crawl job failed time:' + rejectNum);
             isRunning = false;
             setTimeout(task, Config.RETRY_INTERVAL * rejectNum);
         }

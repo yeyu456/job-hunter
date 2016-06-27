@@ -1,19 +1,10 @@
 const CrawlConfig = {
 
-    //****************** CRAWL ******************//
+    //****************** LAGOU ******************//
 
     USER_AGENTS: [
         'Trident/7.0; .NET4.0C; .NET4.0E; .NET CLR 2.0.50727; .NET CLR 3.0.30729; .NET CLR 3.5.30729; InfoPath.3; rv:11.0) like Gecko',
         'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2704.84 Safari/537.36'],
-
-    MOBILE_USER_AGENTS: [
-        'Mozilla/5.0 (Linux; Android 5.1.1; Nexus 5 Build/LMY48B; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/43.0.2357.65 Mobile Safari/537.36',
-        'Mozilla/5.0 (Linux; Android 4.4; Nexus 5 Build/_BuildID_) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/30.0.0.0 Mobile Safari/537.36',
-        'Mozilla/5.0 (Linux; U; Android 4.1.1; zh-cn; Build/KLP) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Safari/534.30',
-        'Mozilla/5.0 (Linux; U; Android 4.0.3; zh-cn; LG-L160L Build/IML74K) AppleWebkit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30',
-        'Mozilla/5.0 (Linux; U; Android 4.2.2; zh-cn; NX403A Build/JDQ39) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30',
-        'Mozilla/5.0 (Linux; Android 4.4.2; Nexus 4 Build/KOT49H) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.59 Mobile Safari/537.36'
-    ],
 
     DEFAULT_LAGOU_POST_HEADERS: {
         'Accept': 'application/json, text/javascript, */*; q=0.01',
@@ -32,12 +23,6 @@ const CrawlConfig = {
         'Accept-Encoding': 'gzip, deflate, sdch',
         'Accept-Language': 'zh-CN,zh;q=0.8,en;q=0.6,ja;q=0.4,ko;q=0.2,zh-TW;q=0.2',
         'Cache-Control': 'no-cache'
-    },
-
-    MOBILE_LAGOU_GET_HEADERS: {
-        'Accept-Language': 'zh-CN,zh;q=0.8,en;q=0.6,ja;q=0.4,ko;q=0.2',
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
     },
 
     ACCEPT_JSON: 'application/json',
@@ -67,6 +52,10 @@ const CrawlConfig = {
 
     ZONE_GET_URL: '&bizArea=',
 
+
+
+    //****************** MOBILE LAGOU ******************//
+
     MOBILE_CITY_URL: 'http://www.lagou.com/custom/search.json?city=',
 
     MOBILE_CITY_URL_POSTFIX: '&positionName=',
@@ -77,7 +66,33 @@ const CrawlConfig = {
 
     MOBILE_COMPANY_URL_POSTFIX: '',
 
-    MOBILE_COMPANY_REF: ''
+    MOBILE_COMPANY_REF: '',
+
+    MOBILE_LAGOU_GET_HEADERS: {
+        'Accept-Language': 'zh-CN,zh;q=0.8,en;q=0.6,ja;q=0.4,ko;q=0.2',
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+    },
+
+    MOBILE_USER_AGENTS: [
+        'Mozilla/5.0 (Linux; Android 5.1.1; Nexus 5 Build/LMY48B; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/43.0.2357.65 Mobile Safari/537.36',
+        'Mozilla/5.0 (Linux; Android 4.4; Nexus 5 Build/_BuildID_) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/30.0.0.0 Mobile Safari/537.36',
+        'Mozilla/5.0 (Linux; U; Android 4.1.1; zh-cn; Build/KLP) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Safari/534.30',
+        'Mozilla/5.0 (Linux; U; Android 4.0.3; zh-cn; LG-L160L Build/IML74K) AppleWebkit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30',
+        'Mozilla/5.0 (Linux; U; Android 4.2.2; zh-cn; NX403A Build/JDQ39) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30',
+        'Mozilla/5.0 (Linux; Android 4.4.2; Nexus 4 Build/KOT49H) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.59 Mobile Safari/537.36'
+    ],
+
+
+
+    //****************** PROXY ******************//
+
+    PROXY_NORMAL_URL: 'http://www.xicidaili.com/nt/',
+
+    PROXY_HIGH_ANONYMOUS_URL: 'http://www.xicidaili.com/nn/',
+
+    PROXY_CRAWL_PAGE_NUM: 3
+
 };
 if (false) {
     CrawlConfig.DEFAULT_LAGOU_POST_HEADERS['Accept-Encoding'] = '';

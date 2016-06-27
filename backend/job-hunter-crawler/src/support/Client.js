@@ -3,13 +3,16 @@ const zlib = require('zlib');
 
 module.exports = class Client {
 
-    static get(url, headers, agent = null) {
+    static get(url, headers, proxy = null, agent = null) {
         let op = {
-            proxy: 'http://112.65.200.211',
             url: url,
             headers: headers,
+            form: data,
             gzip: true
         };
+        if (proxy) {
+            op.proxy = proxy.url;
+        }
         //http agent
         if (agent) {
             op.agent = agent;
@@ -29,14 +32,16 @@ module.exports = class Client {
         });
     }
 
-    static post(url, proxy, headers, data, agent = null) {
+    static post(url, headers, data, proxy = null, agent = null) {
         let op = {
-            proxy: proxy.url,
             url: url,
             headers: headers,
             form: data,
             gzip: true
         };
+        if (proxy) {
+            op.proxy = proxy.url;
+        }
         //http agent
         if (agent) {
             op.agent = agent;

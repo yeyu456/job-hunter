@@ -45,7 +45,6 @@ function openPage(city, dist, zone, job) {
 
 function main() {
     ws = new WebSocket('ws://127.0.0.1:8080');
-    console.log('connected');
     ws.onerror = function _onWsError() {
         phantom.exit(1);
     };
