@@ -7,7 +7,6 @@ module.exports = class Client {
         let op = {
             url: url,
             headers: headers,
-            form: data,
             gzip: true
         };
         if (proxy) {
