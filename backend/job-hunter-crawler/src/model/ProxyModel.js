@@ -20,9 +20,33 @@ const ProxySchema = new mongoose.Schema({
         required: true
     },
     delay: {
-        type: Number,
+        type: [Number],
+        required: true
+    },
+    valid: {
+        type:Boolean,
         required: true
     }
 }, SCHEMA_OPTIONS);
 
 ProxySchema.index({ip: 1, port: 1, type: 1}, {unique: true, sparse: true});
+
+ProxySchema.pre('validate', function(next) {
+    this.updated = Date.now();
+    next();
+});
+
+ProxySchema.post('init', function(doc) {
+    doc.updated = Date.now();
+});
+
+ProxySchema.virtual('url').get(function _getUrl() {
+    return this.type + '://' + this.ip + (this.port === 80? '': ':' + this._port);
+});
+
+let ProxyModel = mongoose.model('ProxyModel', ProxySchema);
+ProxyModel.on('error', function (error) {
+    if (error) {
+        Logger.error(error);
+    }
+});

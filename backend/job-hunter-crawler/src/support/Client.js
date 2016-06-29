@@ -1,6 +1,8 @@
 const request = require('request');
 const zlib = require('zlib');
 
+const HttpError = require('./../exception/HttpError.js');
+
 module.exports = class Client {
 
     static get(url, headers, proxy = null, agent = null) {
@@ -24,8 +26,7 @@ module.exports = class Client {
                     resolve(body);
 
                 } else {
-                    reject(error ||
-                        new Error('Response status code:' + res.statusCode));
+                    reject(new HttpError(error, `Get ${url } with status ${res.statusCode}`));
                 }
             });
         });
@@ -53,8 +54,26 @@ module.exports = class Client {
                     resolve(body);
 
                 } else {
-                    reject(error ||
-                        new Error('Response status code:' + res.statusCode));
+                    reject(new HttpError(error, `Post ${url } with status ${res.statusCode}`));
+                }
+            });
+        });
+    }
+
+    static speed(url, headers, proxy) {
+        let op = {
+            url: url,
+            headers: headers,
+            proxy: proxy.url
+        };
+        let time = Date.now();
+        return new Promise((resolve, reject) => {
+            request.get(op, (error) => {
+                if (!error && res.statusCode === 200) {
+                    resolve(null, Date.now() - time);
+
+                } else {
+                    reject(error, Date.now() - time);
                 }
             });
         });

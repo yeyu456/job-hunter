@@ -12,7 +12,9 @@
 
         "no-mixed-spaces-and-tabs": 2,
 
-        "indent":[2, 4],
+        "indent":[2, 4, {
+            "SwitchCase": 1
+        }],
 
         "eqeqeq": 2,
 
