@@ -20,6 +20,10 @@ const ProxySchema = new mongoose.Schema({
         type: Date,
         required: true
     },
+    used: {
+        type: Number,
+        required: true
+    },
     delay: {
         type: [Number],
         required: true

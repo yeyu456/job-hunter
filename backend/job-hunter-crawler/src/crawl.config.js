@@ -91,11 +91,13 @@ const CrawlConfig = {
 
     PROXY_HIGH_ANONYMOUS_URL: 'http://www.xicidaili.com/nn',
 
-    PROXY_CRAWL_PAGE_NUM: 3,
+    PROXY_CRAWL_PAGE_NUM: 5,
 
     SPEED_TEST_URL: 'http://pstatic.lagou.com/favicon.ico',
 
-    SPEED_KEYWORD: 'lagou'
+    SPEED_KEYWORD: 'lagou',
+
+    SPEED_TIMEOUT: 5000
 
 };
 if (false) {

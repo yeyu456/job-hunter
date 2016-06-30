@@ -50,6 +50,7 @@ module.exports = class Logger {
     static fatal(err) {
         Logger._record(Config.ERROR_PATH, '\n[FATAL]' + getLogDate() + Logger._getErrorStack(err, true));
         Logger._email(err.toString());
+        Logger.debug(err);
     }
 
     static _record(logPath, content) {

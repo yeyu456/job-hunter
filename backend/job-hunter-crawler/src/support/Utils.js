@@ -3,7 +3,7 @@ const Config = require('./../config.js');
 const CrawlConfig = require('./../crawl.config.js');
 
 function getUserAgent() {
-    return CrawlConfig.USER_AGENTS[0];
+    return CrawlConfig.USER_AGENTS[1];
 }
 
 function getLogDate() {

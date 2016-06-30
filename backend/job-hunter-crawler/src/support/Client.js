@@ -3,6 +3,7 @@ const request = require('request');
 const Logger = require('./Log.js');
 const Utils = require('./Utils.js');
 const HttpError = require('./../exception/HttpError.js');
+const ProxyError = require('./../exception/ProxyError.js');
 
 module.exports = class Client {
 
@@ -14,7 +15,7 @@ module.exports = class Client {
             followRedirect: false
         };
         if (proxy) {
-            op.proxy = proxy.url;
+            op.proxy = Utils.getProxyUrl(proxy);
         }
         //http agent
         if (agent) {
@@ -28,13 +29,13 @@ module.exports = class Client {
                     resolve(body);
 
                 } else {
-                    reject(new HttpError(error, `Get ${url } with status ${res.statusCode}`));
+                    reject(new HttpError(error, `Get ${url} failed`));
                 }
             });
         });
     }
 
-    static post(url, headers, data, proxy = null, agent = null) {
+    static post(url, headers, data, proxy = null, connTimeOut = null, agent = null) {
         let op = {
             url: url,
             headers: headers,
@@ -43,7 +44,10 @@ module.exports = class Client {
             followRedirect: false
         };
         if (proxy) {
-            op.proxy = proxy.url;
+            op.proxy = Utils.getProxyUrl(proxy);
+        }
+        if (connTimeOut) {
+            op.timeout = connTimeOut;
         }
         //http agent
         if (agent) {
@@ -57,7 +61,7 @@ module.exports = class Client {
                     resolve(body);
 
                 } else {
-                    reject(new HttpError(error, `Post ${url } with status ${res.statusCode}`));
+                    reject(new HttpError(error, `Post ${url} failed`));
                 }
             });
         });
@@ -78,20 +82,22 @@ module.exports = class Client {
         return new Promise((resolve, reject) => {
             if (!proxyUrl) {
                 reject(new Error(`Invalid proxy url ${proxyUrl}`));
-                return;
             }
             request.get(op, (error, res) => {
                 if (res) {
-                    Logger.info(proxy.url + '\n' + res.headers.location);
+                    Logger.info(proxyUrl + '\n' + res.headers.location);
                 }
-                if (!error &&
-                    (res.statusCode === 301 || res.statusCode === 302) &&
-                    res.headers.location &&
-                    res.headers.location.indexOf(keyword) !== -1) {
-                    resolve(Date.now() - time);
+                if (error) {
+                    reject(new HttpError(error, `speed test on ${proxyUrl} failed`));
+
+                } else if ((res.statusCode !== 301 && res.statusCode !== 302) ||
+                    !res.headers.location ||
+                    res.headers.location.indexOf(keyword) === -1) {
+
+                    reject(new ProxyError(`Invalid proxy ${proxyUrl}`));
 
                 } else {
-                    reject(error?new HttpError(error, `speed test on ${proxy.url} failed`):null, Date.now() - time);
+                    resolve(Date.now() - time);
                 }
             });
         });

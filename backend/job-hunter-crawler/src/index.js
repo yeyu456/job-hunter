@@ -45,7 +45,7 @@ function task() {
             setTimeout(task, Config.CHECK_INTERVAL);
 
         } else {
-            Logger.info('startTime' + new Date(startTime));
+            Logger.info('startTime:' + new Date(startTime));
             isRunning = true;
             crawlJob();
         }

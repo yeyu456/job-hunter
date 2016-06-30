@@ -5,17 +5,21 @@ const Config = {
 
     //****************** TASK ******************//
 
-    CONCURRENT_TASK_NUM: 3,
+    CONCURRENT_TASK_NUM: 5,
 
     PHANTOM_WARM_UP_TIME: 5000, //5s
 
-    TASK_INTERVAL: 1000, //1s
+    TASK_INTERVAL: 2000, //1s
 
     CRAWL_CONTINGENCY_PLAN_TRESHOLD: 3,
 
     EVENT_EMULATE: 'emulate',
 
     EVENT_END: 'end',
+
+    MISSION_INTERVAL: 1000,
+
+    FAIL_CP_INTERVAL: 5000,
 
 
     //****************** TIME ******************//

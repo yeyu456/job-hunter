@@ -6,7 +6,7 @@ const async = require('async');
 
 const Config = require('./../../config.js');
 const CrawlConfig = require('./../../crawl.config.js');
-const ProxyManager = require('./../../proxy/ProxyManager.js');
+const ProxyManager = require('./../proxy/ProxyManager.js');
 const Bridge = require('./../../phantomjs/Bridge.js');
 const Utils = require('./../../support/Utils.js');
 const Logger = require('./../../support/Log.js');
@@ -22,7 +22,6 @@ module.exports = class JobCrawl {
 
     constructor() {
         this._initBridge();
-        this.proxyManager = new ProxyManager();
         this.interval = Config.TASK_INTERVAL;
         this.failedNum = 0;
         this._initEvent();
@@ -39,14 +38,17 @@ module.exports = class JobCrawl {
 
     start() {
         return new Promise((resolve, reject) => {
-            this._seed();
-            this.jobEvent.on(Config.EVENT_END, (error) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve();
-                }
-            });
+            setTimeout(function () {
+                Logger.info('start job crawl');
+                this._seed();
+                this.jobEvent.on(Config.EVENT_END, (error) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve();
+                    }
+                });
+            }.bind(this), Config.MISSION_INTERVAL);
         });
     }
 
@@ -99,16 +101,25 @@ module.exports = class JobCrawl {
             cb();
 
         } else {
-            let proxy = this.proxyManager.getProxy();
-            this._emulate(param.task, proxy);
-            setTimeout(() => {
-                this._initTask(param.task, proxy, param.order).then(() => {
-                    cb();
+            ProxyManager.getMostFastProxy().then((proxy) => {
+                proxy.useragent = Utils.getUserAgent();
+                this._emulate(param.task, proxy);
+                setTimeout(() => {
+                    this._initTask(param.task, proxy, param.order).then(() => {
+                        cb();
 
-                }).catch((err) => {
+                    }).catch((err) => {
+                        cb(err);
+                    });
+                }, Config.PHANTOM_WARM_UP_TIME);
+
+            }).catch((err) => {
+
+                //cp delay
+                setTimeout(()=> {
                     cb(err);
-                });
-            }, Config.PHANTOM_WARM_UP_TIME);
+                }, Config.FAIL_CP_INTERVAL);
+            });
         }
     }
 
@@ -169,7 +180,7 @@ module.exports = class JobCrawl {
             kd : task.job
         };
 
-        Client.post(url, options, data, proxy).then((data) => {
+        Client.post(url, options, data, proxy, CrawlConfig.SPEED_TIMEOUT).then((data) => {
             data = JSON.parse(data);
             if (Utils.isNotValidData(data)) {
                 throw new StructError('!!!data structure changed!!!', JSON.stringify(data));
@@ -194,6 +205,7 @@ module.exports = class JobCrawl {
         }).catch((err) => {
             this.failedNum++;
             Logger.error(new HttpError(err, 'failed time ' + this.failedNum));
+            ProxyManager.deleteProxy(proxy);
             cb(new HttpError(err));
         });
     }
@@ -209,6 +221,7 @@ module.exports = class JobCrawl {
 
                 } else {
                     Logger.debug('finished saved task ' + task.zone);
+                    task.startNum++;
                     cb();
                 }
             });

@@ -5,14 +5,13 @@ const Logger = require('./../support/Log.js');
 module.exports = class Crawl {
 
     constructor() {
-        //this.job = new JobCrawl();
+        this.job = new JobCrawl();
         this.proxy = new ProxyCrawl();
         //this.company = new CompanyCrawl();
     }
 
     start() {
-        return this.proxy.start()
-        // .then(this.job.start).then(() => {
+        return this.proxy.start().then(this.job.start.bind(this.job))//.then(() => {
         //     //return this.company.start();
         //
         // }).then(this.end.bind(this));
