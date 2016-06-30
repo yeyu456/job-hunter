@@ -93,7 +93,9 @@ const CrawlConfig = {
 
     PROXY_CRAWL_PAGE_NUM: 3,
 
-    SPEED_TEST_URL: 'http://www.lagou.com'
+    SPEED_TEST_URL: 'http://pstatic.lagou.com/favicon.ico',
+
+    SPEED_KEYWORD: 'lagou'
 
 };
 if (false) {

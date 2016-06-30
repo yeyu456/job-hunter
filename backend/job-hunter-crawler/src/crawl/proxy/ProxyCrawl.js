@@ -10,12 +10,14 @@ const Utils = require('./../../support/Utils.js');
 const HttpError = require('./../../exception/HttpError.js');
 const ProxyError = require('./../../exception/ProxyError.js');
 const ProxyDataError = require('./../../exception/ProxyDataError.js');
+const DatabaseError = require('./../../exception/DatabaseError.js');
 
-const ProxyModel = mongoose.model('ProxyModel');
+let ProxyModel;
 
 module.exports = class ProxyCrawl {
 
     start() {
+        ProxyModel = mongoose.model('ProxyModel');
         return new Promise((resolve) => {
             this._crawl(resolve);
         });
@@ -29,7 +31,6 @@ module.exports = class ProxyCrawl {
             urls.push((CrawlConfig.PROXY_NORMAL_URL + '/' + i));
             urls.push((CrawlConfig.PROXY_HIGH_ANONYMOUS_URL + '/' + i));
         }
-        console.log(urls);
         async.each(urls, (url, cb) => {
             let headers = JSON.parse(CrawlConfig.DEFAULT_LAGOU_GET_HEADERS);
             headers['User-Agent'] = Utils.getUserAgent();
@@ -82,11 +83,11 @@ module.exports = class ProxyCrawl {
                     Logger.error(new ProxyDataError(`Invalid proxy type ${type}`));
                     return;
                 }
-                proxies.push(new ProxyModel({
+                proxies.push({
                     ip: ip,
                     port: port,
                     type: type.toLowerCase()
-                }));
+                });
             } else {
                 Logger.error(new ProxyDataError('Proxy data structure changed with len ' + children.length));
             }
@@ -99,16 +100,26 @@ module.exports = class ProxyCrawl {
             let headers = JSON.parse(CrawlConfig.DEFAULT_LAGOU_GET_HEADERS);
             headers['User-Agent'] = Utils.getUserAgent();
             async.each(proxies, (proxy, cb) => {
-                Client.speed(CrawlConfig.SPEED_TEST_URL, headers, proxy).then((delay) => {
+                Client.speed(CrawlConfig.SPEED_TEST_URL, headers, proxy, CrawlConfig.SPEED_KEYWORD).then((delay) => {
                     proxy.delay = delay;
                     proxy.valid = true;
 
-                }).catch((err) => {
-                    Logger.error(err);
+                }).catch((err, delay) => {
+                    if (err) {
+                        Logger.error(err);
+                    }
                     proxy.valid = false;
+                    proxy.delay = delay;
 
                 }).then(() => {
-                    proxy.findOneAndUpdate({ip:proxy.ip, port:proxy.port, type:proxy.type}, proxy, {upsert:true}, (err) => {
+                    console.log('start save');
+                    mongoose.model('ProxyModel').findOneAndUpdate({
+                        ip:proxy.ip,
+                        port:proxy.port,
+                        type:proxy.type
+
+                    }, proxy, { upsert: true }, (err) => {
+                        console.log('end save');
                         if (err) {
                             Logger.error(new DatabaseError(err, `Cannot update proxy ${proxy.ip}`));
                         }
@@ -116,6 +127,7 @@ module.exports = class ProxyCrawl {
                     })
                 });
             }, (err) => {
+                console.log('end async');
                 if (err) {
                     Logger.error(new ProxyError(err));
                 }

@@ -1,6 +1,7 @@
 const request = require('request');
-const zlib = require('zlib');
 
+const Logger = require('./Log.js');
+const Utils = require('./Utils.js');
 const HttpError = require('./../exception/HttpError.js');
 
 module.exports = class Client {
@@ -9,7 +10,8 @@ module.exports = class Client {
         let op = {
             url: url,
             headers: headers,
-            gzip: true
+            gzip: true,
+            followRedirect: false
         };
         if (proxy) {
             op.proxy = proxy.url;
@@ -37,7 +39,8 @@ module.exports = class Client {
             url: url,
             headers: headers,
             form: data,
-            gzip: true
+            gzip: true,
+            followRedirect: false
         };
         if (proxy) {
             op.proxy = proxy.url;
@@ -60,20 +63,35 @@ module.exports = class Client {
         });
     }
 
-    static speed(url, headers, proxy) {
+    static speed(url, headers, proxy, keyword, connTimeOut) {
+        let proxyUrl = Utils.getProxyUrl(proxy);
         let op = {
             url: url,
             headers: headers,
-            proxy: proxy.url
+            proxy: proxyUrl,
+            followRedirect: false
         };
+        if (connTimeOut) {
+            op.timeout = connTimeOut;
+        }
         let time = Date.now();
         return new Promise((resolve, reject) => {
-            request.get(op, (error) => {
-                if (!error && res.statusCode === 200) {
-                    resolve(null, Date.now() - time);
+            if (!proxyUrl) {
+                reject(new Error(`Invalid proxy url ${proxyUrl}`));
+                return;
+            }
+            request.get(op, (error, res) => {
+                if (res) {
+                    Logger.info(proxy.url + '\n' + res.headers.location);
+                }
+                if (!error &&
+                    (res.statusCode === 301 || res.statusCode === 302) &&
+                    res.headers.location &&
+                    res.headers.location.indexOf(keyword) !== -1) {
+                    resolve(Date.now() - time);
 
                 } else {
-                    reject(error, Date.now() - time);
+                    reject(error?new HttpError(error, `speed test on ${proxy.url} failed`):null, Date.now() - time);
                 }
             });
         });

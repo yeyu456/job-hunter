@@ -70,6 +70,18 @@ function isValidProxyType(type) {
     return type && (type.toLowerCase() === 'http' || type.toLowerCase() === 'https');
 }
 
+function getProxyUrl(proxy) {
+    if (proxy &&
+        proxy.type &&
+        proxy.ip && isValidIP(proxy.ip) &&
+        Number.isInteger(proxy.port) && proxy.port > 0 && proxy.port < 65535) {
+        return proxy.type + '://' + proxy.ip + (proxy.port === 80? '': ':' + proxy.port);
+
+    } else {
+        return null;
+    }
+}
+
 module.exports = {
     getUserAgent: getUserAgent,
     getLogDate: getLogDate,
@@ -81,5 +93,6 @@ module.exports = {
     getRandomInt: getRandomInt,
     isValidIP: isValidIP,
     isNotValidData: isNotValidData,
-    isValidProxyType: isValidProxyType
+    isValidProxyType: isValidProxyType,
+    getProxyUrl: getProxyUrl
 };

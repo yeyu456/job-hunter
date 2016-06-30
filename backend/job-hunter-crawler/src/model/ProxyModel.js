@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+const Logger = require('./../support/log.js');
 const SCHEMA_OPTIONS = require('./../config.js').SCHEMA_OPTIONS;
 
 const ProxySchema = new mongoose.Schema({
@@ -41,7 +42,7 @@ ProxySchema.post('init', function(doc) {
 });
 
 ProxySchema.virtual('url').get(function _getUrl() {
-    return this.type + '://' + this.ip + (this.port === 80? '': ':' + this._port);
+    return this.type + '://' + this.ip + (this.port === 80? '': ':' + this.port);
 });
 
 let ProxyModel = mongoose.model('ProxyModel', ProxySchema);
