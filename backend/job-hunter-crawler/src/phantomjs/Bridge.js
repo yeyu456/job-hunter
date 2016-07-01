@@ -5,6 +5,7 @@ const phantomjs = require('phantomjs-prebuilt');
 const ws = require('ws');
 
 const Config = require('./../config.js');
+const CrawlConfig = require('./../crawl.config.js');
 const Logger = require('./../support/Log.js');
 const PhantomError = require('./../exception/PhantomError.js');
 
@@ -17,11 +18,11 @@ module.exports = class Bridge {
     push(task, proxy) {
         Logger.debug('bridge', JSON.stringify(task));
         if (this.ws.clients.length > 0) {
+            let url = CrawlConfig.GET_URL + task.job + CrawlConfig.CITY_GET_URL + encodeURIComponent(task.city) +
+            CrawlConfig.DISTRICT_GET_URL + encodeURIComponent(task.dist) +
+            CrawlConfig.ZONE_GET_URL + encodeURIComponent(task.zone);
             let data = {
-                city: task.city,
-                dist: task.dist,
-                zone: task.zone,
-                job: task.job,
+                url: url,
                 proxyIP: proxy.ip,
                 proxyPort: proxy.port,
                 proxyType: proxy.type,

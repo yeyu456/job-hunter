@@ -55,9 +55,10 @@ module.exports = class JobCrawl {
     _seed() {
         this.seedTasks = [];
         mongoose.model('TaskModel').find().sort({
+            updateTime:1,
             city:1,
             job:1
-        }).limit(500).exec((error, docs) => {
+        }).exec((error, docs) => {
             if (error || docs.length === 0) {
                 error = error ? new DatabaseError(error) : new DatabaseError('Cannot find any tasks');
                 Logger.error(error);
@@ -79,6 +80,11 @@ module.exports = class JobCrawl {
         };
         for (let i= this.seedTasks.length;i>0;i--) {
             let task = this.seedTasks.pop();
+            if (task.updateTime) {
+                task.updateTime += 1;
+            } else {
+                task.updateTime = 1;
+            }
             queue.push({task:task, order:i}, (error) => {
                 if (error) {
                     Logger.error(new JobDataError(error,
@@ -214,6 +220,7 @@ module.exports = class JobCrawl {
         Logger.debug('save ' + task.zone);
         if (jobs.length === 0) {
             Logger.warn(new JobDataError('No job data.'));
+            task.startNum++;
             mongoose.model('TaskModel').update({ _id: task._id }, task, (err) => {
                 if (err) {
                     Logger.error(err);
@@ -221,7 +228,6 @@ module.exports = class JobCrawl {
 
                 } else {
                     Logger.debug('finished saved task ' + task.zone);
-                    task.startNum++;
                     cb();
                 }
             });

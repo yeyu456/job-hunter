@@ -1,12 +1,16 @@
 //phantomjs don't support let keyword
 /*eslint-disable no-var*/
-
 var webpage = require('webpage');
 
-var CrawlConfig = require('./../crawl.config.js');
-
-var page;
 var ws;
+var page = webpage.create();
+page.onResourceRequested = function(requestData, request) {
+    //abort unnecessary resources request
+    if (/JPG|jpg|png|PNG|\.css|baidu|google|(qq\.com)/.test(requestData['url'])) {
+        request.abort();
+    }
+};
+var queue = [];
 
 function send(data) {
     if (data.hasOwnProperty('error')) {
@@ -15,31 +19,23 @@ function send(data) {
     ws.send(JSON.stringify(data));
 }
 
-function initPage(proxyIP, proxyPort, proxyType, useragent) {
-    phantom.setProxy(proxyIP, proxyPort, proxyType, '', '');
-    page = webpage.create({
-        settings: {
-            userAgent: useragent
-        }
-    });
-    page.onResourceRequested = function(requestData, request) {
-        //abort unnecessary resources request
-        if (/JPG|jpg|png|PNG|\.css|baidu|google|(qq\.com)/.test(requestData['url'])) {
-            request.abort();
-        }
-    };
-}
-
-function openPage(city, dist, zone, job) {
-    var getUrl = CrawlConfig.GET_URL + job + CrawlConfig.CITY_GET_URL + encodeURIComponent(city) +
-        CrawlConfig.DISTRICT_GET_URL + encodeURIComponent(dist) +
-        CrawlConfig.ZONE_GET_URL + encodeURIComponent(zone);
-    page.open(getUrl, function(status) {
+function open() {
+    if (queue.length === 0) {
+        setTimeout(function () {
+            open();
+        }.bind(this), 500);
+        return;
+    }
+    var data = queue.pop();
+    phantom.setProxy(data['proxyIP'], data['proxyPort'], data['proxyType'], '', '');
+    page.settings.userAgent = data['useragent'];
+    page.open(data['url'], function(status) {
         if (status !== 'success') {
-            send({error:'Cannot access url ' + getUrl});
+            send({error:'Cannot access url ' + data['url']});
         } else {
             send({msg: 'done'});
         }
+        open();
     });
 }
 
@@ -55,10 +51,7 @@ function main() {
         var data = event.data;
         data = JSON.parse(data);
         if(!data ||
-            !data['city'] ||
-            !data['dist'] ||
-            !data['zone'] ||
-            !data['job'] ||
+            !data['url'] ||
             !data['proxyIP'] ||
             !data['proxyPort'] ||
             !data['proxyType'] ||
@@ -68,8 +61,7 @@ function main() {
         } else {
             var port = parseInt(data['proxyPort']);
             if (port && port > 0 && port < 65535) {
-                initPage(data['proxyIP'], data['proxyPort'], data['proxyType'], data['useragent']);
-                openPage(data['city'], data['dist'], data['zone'], data['job']);
+                queue.push(data);
 
             } else {
                 send({error: 'invalid proxy port'});
@@ -77,4 +69,6 @@ function main() {
         }
     }
 }
+
 main();
+open();
