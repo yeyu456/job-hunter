@@ -3,7 +3,7 @@ const Config = require('./../config.js');
 const CrawlConfig = require('./../crawl.config.js');
 
 function getUserAgent() {
-    return CrawlConfig.USER_AGENTS[1];
+    return CrawlConfig.USER_AGENTS[getRandomInt(0, CrawlConfig.USER_AGENTS.length)];
 }
 
 function getLogDate() {
@@ -38,6 +38,10 @@ function isSameDay(date1, date2) {
     } else {
         return false;
     }
+}
+
+function getYesterday() {
+    return new Date(new Date().setHours(0, 0, 0, 0));
 }
 
 function getMaxPageNum(totalCount, pageSize) {
@@ -89,6 +93,7 @@ module.exports = {
     isStartTime: isStartTime,
     getNextStartTime: getNextStartTime,
     isSameDay: isSameDay,
+    getYesterday: getYesterday,
     getMaxPageNum: getMaxPageNum,
     getRandomInt: getRandomInt,
     isValidIP: isValidIP,

@@ -16,6 +16,10 @@ const ProxySchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    useragent: {
+        type: String,
+        required: true
+    },
     updated: {
         type: Date,
         required: true

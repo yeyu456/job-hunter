@@ -7,22 +7,9 @@ const Config = {
 
     CONCURRENT_TASK_NUM: 5,
 
-    PHANTOM_WARM_UP_TIME: 5000, //5s
-
-    TASK_INTERVAL: 2000, //1s
-
-    CRAWL_CONTINGENCY_PLAN_TRESHOLD: 3,
-
-    EVENT_EMULATE: 'emulate',
-
     EVENT_END: 'end',
 
     MISSION_INTERVAL: 1000,
-
-    FAIL_CP_INTERVAL: 5000,
-
-
-    //****************** TIME ******************//
 
     START_TIME: '17:00:00', //5:00 PM
 
@@ -33,6 +20,10 @@ const Config = {
     ONE_DAY: 24 * 3600 * 1000, //1 day in millisecond
 
     MAX_REJECT_NUM: 3,
+
+    PHANTOM_MONITOR_INTERVAL: 5000, //5s
+
+    PHANTOM_TASK_TIMEOUT: 10000, //10s
 
 
     //****************** EMAIL ******************//

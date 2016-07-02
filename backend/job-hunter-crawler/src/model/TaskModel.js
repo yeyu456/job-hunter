@@ -34,7 +34,8 @@ const TaskSchema = new mongoose.Schema({
         required: true
     },
     updateTime: {
-        type: Number
+        type: Number,
+        required: true
     }
 }, SCHEMA_OPTIONS);
 

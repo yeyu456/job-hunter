@@ -19,7 +19,7 @@ module.exports = class Cache {
             }
             this.cleanId = setImmediate(() => {
                 let date = Date.now();
-                for (let k in this.cache) {
+                for (let k = 0;k < this.cache.length;k++) {
                     if (this.cache[k].expire < date) {
                         this.del(k);
                     }

@@ -11,10 +11,8 @@ module.exports = class Crawl {
     }
 
     start() {
-        return this.job.start()//.then(() => {
-        //     //return this.company.start();
-        //
-        // }).then(this.end.bind(this));
+        //return this.proxy.start().then(this.job.start.bind(this.job));
+        return this.job.start();
     }
 
     end() {

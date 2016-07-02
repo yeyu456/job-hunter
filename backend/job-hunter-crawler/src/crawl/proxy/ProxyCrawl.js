@@ -87,7 +87,9 @@ module.exports = class ProxyCrawl {
                     ip: ip,
                     port: port,
                     type: type.toLowerCase(),
-                    used: 0
+                    used: 0,
+                    useragent: Utils.getUserAgent(),
+                    updated: Date.now()
                 });
             } else {
                 Logger.error(new ProxyDataError('Proxy data structure changed with len ' + children.length));

@@ -76,7 +76,7 @@ module.exports = class Logger {
             return e.stack;
 
         } else {
-            return e.stack.split('\n').filter((value, index, array) => {
+            return e.stack.split('\n').filter((value, index) => {
                 return index <= Config.RECORD_ERROR_STACK_DEPTH;
             }).join('\n');
         }

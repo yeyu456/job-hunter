@@ -10,12 +10,14 @@ page.onResourceRequested = function(requestData, request) {
         request.abort();
     }
 };
+page.onResourceTimeout = function (request) {
+    if (/px=default/.test(request['url'])) {
+        send({fail: true, url: request['url']});
+    }
+};
 var queue = [];
 
 function send(data) {
-    if (data.hasOwnProperty('error')) {
-        console.error(new Error(data.error, data));
-    }
     ws.send(JSON.stringify(data));
 }
 
@@ -23,24 +25,54 @@ function open() {
     if (queue.length === 0) {
         setTimeout(function () {
             open();
-        }.bind(this), 500);
+
+        }, 100);
         return;
     }
+
     var data = queue.pop();
-    phantom.setProxy(data['proxyIP'], data['proxyPort'], data['proxyType'], '', '');
-    page.settings.userAgent = data['useragent'];
+    phantom.setProxy(data['proxy']['ip'], parseInt(data['proxy']['port']), data['proxy']['type'], '', '');
+    page.settings.userAgent = data['proxy']['useragent'];
+    page.settings.loadImages = false;
+    page.settings.resourceTimeout = 3000;
+
     page.open(data['url'], function(status) {
         if (status !== 'success') {
-            send({error:'Cannot access url ' + data['url']});
+            send({fail: true, url: data['url']});
+
         } else {
-            send({msg: 'done'});
+            send({success: true, url: data['url']});
         }
         open();
     });
 }
 
+function isValidData(data) {
+    if(!data ||
+        !data['url'] ||
+        !data['proxy'] ||
+        !data['proxy']['ip'] ||
+        !data['proxy']['port'] ||
+        !data['proxy']['type'] ||
+        !data['proxy']['useragent']) {
+        return false;
+
+    } else {
+        var port = parseInt(data['proxy']['port']);
+        if (port && port > 0 && port < 65535) {
+            return true;
+
+        } else {
+            return false;
+        }
+    }
+}
+
 function main() {
     ws = new WebSocket('ws://127.0.0.1:8080');
+    setInterval(function () {
+        send('h');
+    }, 1000);
     ws.onerror = function _onWsError() {
         phantom.exit(1);
     };
@@ -48,24 +80,25 @@ function main() {
         phantom.exit();
     };
     ws.onmessage = function _onWsMsg(event) {
-        var data = event.data;
-        data = JSON.parse(data);
-        if(!data ||
-            !data['url'] ||
-            !data['proxyIP'] ||
-            !data['proxyPort'] ||
-            !data['proxyType'] ||
-            !data['useragent']) {
-            send({error: 'invalid data'});
-
-        } else {
-            var port = parseInt(data['proxyPort']);
-            if (port && port > 0 && port < 65535) {
-                queue.push(data);
+        try {
+            var data = event.data;
+            data = JSON.parse(data);
+            if (data instanceof Array) {
+                for (var i=0;i<data.length;i++) {
+                    (function (d) {
+                        if (isValidData(d)) {
+                            queue.push(d);
+                        }
+                    })(data[i]);
+                }
 
             } else {
-                send({error: 'invalid proxy port'});
+                if (isValidData(data)) {
+                    queue.push(data);
+                }
             }
+        } catch (e) {
+            send({error: 'invalid data'});
         }
     }
 }
