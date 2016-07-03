@@ -30,23 +30,7 @@ function getTask() {
         let cp = Client.get(url, headers).then((body) => {
 
             let dists = getAreas(body, '.detail-district-area a');
-            let distP = [];
-            for (let dist of dists) {
-                let distUrl = url + CrawlConfig.DISTRICT_GET_URL +
-                    urlencode.encode(dist, 'utf8');
-
-                let dp = Client.get(distUrl, headers).then((body) => {
-                    let zones = getAreas(body, '.detail-bizArea-area a');
-                    saveTasks(city, dist, zones);
-
-                }).catch((err) => {
-                    Logger.error(new HttpError(err,
-                        `Cannot retrieve zones in ${dist} district of ${city} city`));
-                });
-
-                distP.push(dp);
-            }
-            return Promise.all(distP);
+            saveTasks(city, dists);
 
         }).catch((err) => {
             Logger.error(new LocationError(err, `Cannot retrieve locations of ${city} city`));
@@ -72,31 +56,31 @@ function getAreas(body, selector) {
     return result;
 }
 
-function saveTasks(city, dist, zones) {
-    Logger.debug([].concat('save tasks', city, dist, zones));
+function saveTasks(city, dists) {
+    Logger.debug([].concat('save tasks', city, dists));
     let models = [];
-    for (let zone of zones) {
+    for (let dist of dists) {
         for (let job of CrawlConfig.JOB_TYPES) {
             models.push({
                 job: job,
                 city: city,
                 dist: dist,
-                zone: zone,
                 startNum: 1,
-                maxNum: 1
+                maxNum: 1,
+                updateTime: 0
             });
         }
     }
     if (models.length === 0) {
-        Logger.error(new LocationError(`No zone in ${dist} district of ${city} city`));
+        Logger.error(new LocationError(`No dist in ${city} city`));
         return;
     }
-    mongoose.model('TaskModel').insertMany(models, (err, docs) => {
+    mongoose.model('TaskModel').insertMany(models, (err) => {
         if (err) {
-            Logger.error(new DataBaseError(err, `Failed to insert district ${dist} of city ${city}`));
+            Logger.error(new DataBaseError(err, `Failed to insert city ${city}`));
 
         } else {
-            Logger.debug([].concat(city, dist, docs, 'saved'));
+            Logger.debug(`city ${city} saved`);
         }
     });
 }

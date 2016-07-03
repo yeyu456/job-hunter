@@ -95,9 +95,9 @@ module.exports = class JobCrawl {
         mongoose.model('TaskModel').find(cond).sort({
             updateTime:1,
             city:1,
-            job:1
+            job:-1
 
-        }).limit(taskSize * 5).exec((error, docs) => {
+        }).limit(taskSize * 2).exec((error, docs) => {
             if (error) {
                 error = new DatabaseError(error, 'Failed to get task.');
                 Logger.error(error);
@@ -144,7 +144,7 @@ module.exports = class JobCrawl {
         setTimeout(() => {
             async.whilst(
                 () => {
-                    Logger.debug(`zone ${task.zone}:${task.startNum}/${task.maxNum}`);
+                    Logger.debug(`dist ${task.dist}:${task.startNum}/${task.maxNum}`);
                     return task.startNum <= task.maxNum;
                 },
                 (cb) => {
@@ -154,7 +154,7 @@ module.exports = class JobCrawl {
 
                     ], (err) => {
                         if (err) {
-                            Logger.error(err, `Task ${task.city}/${task.dist}/${task.zone} failed on page ${task.startNum}`);
+                            Logger.error(err, `Task ${task.city}/${task.dist} failed on page ${task.startNum}`);
                             cb(err);
                         } else {
                             cb();
@@ -163,9 +163,9 @@ module.exports = class JobCrawl {
                 },
                 (err) => {
                     if (err) {
-                        Logger.error(err, `Task ${task.city}/${task.dist}/${task.zone} failed on crawl`);
+                        Logger.error(err, `Task ${task.city}/${task.dist} failed on crawl`);
                     } else {
-                        Logger.debug(`Task ${task.city}/${task.dist}/${task.zone} finished on crawl`);
+                        Logger.debug(`Task ${task.city}/${task.dist} finished on crawl`);
                     }
                     Logger.debug('new task on _crawl');
                     this._getTask(1);
@@ -176,23 +176,22 @@ module.exports = class JobCrawl {
 
     _proxyFail(task, proxy, isDuplicated) {
         if (isDuplicated) {
-            Logger.info(`Task ${task.city}/${task.dist}/${task.zone} duplicated on bridge`);
+            Logger.info(`Task ${task.city}/${task.dist} duplicated on bridge`);
             this.proxies.push(proxy);
 
         } else {
-            Logger.error(new ProxyError(`Task ${task.city}/${task.dist}/${task.zone} failed on bridge`));
+            Logger.error(new ProxyError(`Task ${task.city}/${task.dist} failed on bridge`));
             ProxyManager.deleteProxy(proxy);
         }
         task.updateTime++;
         mongoose.model('TaskModel').update({
             job: task.job,
             city: task.city,
-            dist: task.dist,
-            zone: task.zone
+            dist: task.dist
 
         }, task, (err) => {
             if (err) {
-                Logger.error(new DatabaseError(err, `error on updating failed Task ${task.city}/${task.dist}/${task.zone}`));
+                Logger.error(new DatabaseError(err, `error on updating failed Task ${task.city}/${task.dist}`));
             }
             if (isDuplicated) {
                 Logger.debug('new task on duplicated');
@@ -208,11 +207,10 @@ module.exports = class JobCrawl {
     }
 
     _network(task, proxy, cb) {
-        Logger.debug('network', task.zone);
+        Logger.debug('network', task.dist);
         let startPageNum = task.startNum;
         let url = CrawlConfig.CITY_URL + CrawlConfig.CITY_GET_URL + urlencode.encode(task.city, 'utf8') +
-            CrawlConfig.DISTRICT_GET_URL + urlencode.encode(task.dist, 'utf8') +
-            CrawlConfig.ZONE_GET_URL + urlencode(task.zone, 'utf8') + CrawlConfig.CITY_URL_POSTFIX;
+            CrawlConfig.DISTRICT_GET_URL + urlencode.encode(task.dist, 'utf8') + CrawlConfig.CITY_URL_POSTFIX;
         let options = JSON.parse(CrawlConfig.DEFAULT_LAGOU_POST_HEADERS);
         let data = {
             first : false,
@@ -232,7 +230,7 @@ module.exports = class JobCrawl {
 
                 if (parseInt(data['content']['pageNo']) !== startPageNum) {
                     Logger.warn(new JobDataError(
-                        `Unmatched page number ${startPageNum}-${data.content.pageNo} ${task.city}/${task.dist}/${task.zone} ${task.job}`));
+                        `Unmatched page number ${startPageNum}-${data.content.pageNo} ${task.city}/${task.dist} ${task.job}`));
                     cb(null, [], task, startPageNum);
 
                 } else {
@@ -257,7 +255,7 @@ module.exports = class JobCrawl {
     }
 
     _save(jobs, task, maxNum, cb) {
-        Logger.debug('save ' + task.zone);
+        Logger.debug('save ' + task.dist);
         if (jobs.length === 0) {
             Logger.warn(new JobDataError('No job data.'));
             task.startNum++;
@@ -267,7 +265,7 @@ module.exports = class JobCrawl {
                     cb(new DatabaseError(err));
 
                 } else {
-                    Logger.debug('finished saved task ' + task.zone);
+                    Logger.debug('finished saved task ' + task.dist);
                     cb();
                 }
             });
@@ -276,9 +274,12 @@ module.exports = class JobCrawl {
             let jobModels = [];
             let companyModels = [];
             for (let job of jobs) {
+                if (!job.businessZones || job.businessZones === null || job.businessZones === 'null') {
+                    job.businessZones = [];
+                }
                 if (job.city !== task.city || job.district !== task.dist) {
                     Logger.error(new JobDataError(
-                        `Not matched job id ${job.positionId} with location ${job.city}-${job.district} / ${city}-${dist}-${zone}`));
+                        `Not matched job id ${job.positionId} with location ${job.city}-${job.district} / ${task.city}-${task.dist}`));
                     jobModels.push({
                         id: job.positionId,
                         companyId: job.companyId,
@@ -290,7 +291,7 @@ module.exports = class JobCrawl {
                         created: job.createTimeSort,
                         city: job.city,
                         dist: job.district,
-                        zone: task.zone
+                        zone: job.businessZones
                     });
 
                 } else {
@@ -305,7 +306,7 @@ module.exports = class JobCrawl {
                         created: job.createTimeSort,
                         city: task.city,
                         dist: task.dist,
-                        zone: task.zone
+                        zone: job.businessZones
                     });
                 }
                 companyModels.push({
@@ -315,11 +316,11 @@ module.exports = class JobCrawl {
                 });
             }
             mongoose.model('JobModel').insertIfNotExist(jobModels).then(() => {
-                Logger.debug('finished saved job ' + task.zone);
+                Logger.debug('finished saved job ' + task.dist);
                 return mongoose.model('CompanyModel').insertIfNotExist(companyModels);
 
             }).then(() => {
-                Logger.debug('finished saved company ' + task.zone);
+                Logger.debug('finished saved company ' + task.dist);
                 task.maxNum = maxNum;
                 task.startNum++;
                 mongoose.model('TaskModel').update({ _id: task._id }, task, (err) => {
@@ -328,7 +329,7 @@ module.exports = class JobCrawl {
                         cb(new DatabaseError(err));
 
                     } else {
-                        Logger.debug('finished saved task ' + task.zone);
+                        Logger.debug('finished saved task ' + task.dist);
                         cb();
                     }
                 });

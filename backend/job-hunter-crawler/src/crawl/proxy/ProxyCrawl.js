@@ -31,13 +31,23 @@ module.exports = class ProxyCrawl {
             urls.push((CrawlConfig.PROXY_NORMAL_URL + '/' + i));
             urls.push((CrawlConfig.PROXY_HIGH_ANONYMOUS_URL + '/' + i));
         }
+        for(let i=1;i<=CrawlConfig.PROXY_CRAWL_PAGE_NUM;i++) {
+            urls.push(CrawlConfig.PROXY_KX_HIGH_ANONYMOUS_URL + i + '.html');
+            urls.push(CrawlConfig.PROXY_KX_NORMAL_URL + i + '.html');
+        }
         async.each(urls, (url, cb) => {
             let headers = JSON.parse(CrawlConfig.DEFAULT_LAGOU_GET_HEADERS);
             headers['User-Agent'] = Utils.getUserAgent();
             Client.get(url, headers).then((body) => {
-                let proxies = this._parse(body);
+                let proxies;
+                if (url.indexOf('kx') !== -1) {
+                    proxies = this._kxParse(body);
+
+                } else {
+                    proxies = this._parse(body);
+                }
                 if (proxies.length === 0) {
-                    Logger.warn(`No proxy data in ${url}`);
+                    Logger.warn(new ProxyError(`No proxy data in ${url}`));
 
                 } else {
                     return this._speedMesure(proxies);
@@ -93,6 +103,49 @@ module.exports = class ProxyCrawl {
                 });
             } else {
                 Logger.error(new ProxyDataError('Proxy data structure changed with len ' + children.length));
+            }
+        });
+        return proxies;
+    }
+
+    _kxParse(body) {
+        let $ = cheerio.load(body);
+        let proxies = [];
+        $('.ui.table.segment tr').each((index, element) => {
+            if (index === 0) {
+                Logger.info('index 0');
+                return;
+            }
+            let children = $(element).find('td');
+            if (children.length === 7) {
+                let ip = children.get(0).children[0].data;
+                if (!Utils.isValidIP(ip)) {
+                    Logger.error(new ProxyDataError(`Invalid kx proxy ip ${ip}`));
+                    return;
+                }
+                let port = parseInt(children.get(1).children[0].data);
+                if (!Number.isInteger(port)) {
+                    Logger.error(new ProxyDataError(`Invalid kx proxy port ${port}`));
+                    return;
+                }
+                let type = children.get(3).children[0].data;
+                if (type === 'HTTP,HTTPS') {
+                    type = 'http';
+                }
+                if (!Utils.isValidProxyType(type)) {
+                    Logger.error(new ProxyDataError(`Invalid kx proxy type ${type}`));
+                    return;
+                }
+                proxies.push({
+                    ip: ip,
+                    port: port,
+                    type: type.toLowerCase(),
+                    used: 0,
+                    useragent: Utils.getUserAgent(),
+                    updated: Date.now()
+                });
+            } else {
+                Logger.error(new ProxyDataError('KX Proxy data structure changed with len ' + children.length));
             }
         });
         return proxies;

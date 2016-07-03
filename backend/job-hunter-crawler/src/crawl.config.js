@@ -24,12 +24,12 @@ const CrawlConfig = {
     ACCEPT_JSON: 'application/json',
 
     CITIES: [
-        '上海'//, '深圳', '广州', '北京', '杭州'
+        '上海'//, '杭州', '深圳', '广州', '北京',
     ],
 
     //高端技术职位:gaoduanjishuzhiwei
     JOB_TYPES: [
-        'Java', 'gaoduanjishuzhiwei'//, 'Node.js', 'Javascript'
+        '前端开发', 'Java'//, 'gaoduanjishuzhiwei', 'Node.js'
     ],
 
     CITY_URL: 'http://www.lagou.com/jobs/positionAjax.json',
@@ -78,13 +78,18 @@ const CrawlConfig = {
 
     PROXY_HIGH_ANONYMOUS_URL: 'http://www.xicidaili.com/nn',
 
+    PROXY_KX_HIGH_ANONYMOUS_URL: 'http://www.kxdaili.com/dailiip/1/',
+
+    PROXY_KX_NORMAL_URL: 'http://www.kxdaili.com/dailiip/2/',
+
     PROXY_CRAWL_PAGE_NUM: 10,
 
     SPEED_TEST_URL: 'http://pstatic.lagou.com/favicon.ico',
 
     SPEED_KEYWORD: 'lagou',
 
-    SPEED_TIMEOUT: 5000,
+    SPEED_TIMEOUT: 8000,
+
 
 
 
@@ -152,9 +157,9 @@ const CrawlConfig = {
     ]
 
 };
-if (false) {
-    CrawlConfig.DEFAULT_LAGOU_POST_HEADERS['Accept-Encoding'] = '';
-}
+// if (false) {
+//     CrawlConfig.DEFAULT_LAGOU_POST_HEADERS['Accept-Encoding'] = '';
+// }
 CrawlConfig.DEFAULT_LAGOU_POST_HEADERS = JSON.stringify(CrawlConfig.DEFAULT_LAGOU_POST_HEADERS);
 CrawlConfig.DEFAULT_LAGOU_GET_HEADERS = JSON.stringify(CrawlConfig.DEFAULT_LAGOU_GET_HEADERS);
 CrawlConfig.MOBILE_LAGOU_GET_HEADERS = JSON.stringify(CrawlConfig.MOBILE_LAGOU_GET_HEADERS);

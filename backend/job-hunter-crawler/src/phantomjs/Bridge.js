@@ -30,9 +30,8 @@ module.exports = class Bridge {
 
     emulate(task, proxy) {
         Logger.debug('bridge', JSON.stringify(task));
-        let url = CrawlConfig.GET_URL + task.job + CrawlConfig.CITY_GET_URL + encodeURIComponent(task.city) +
-        CrawlConfig.DISTRICT_GET_URL + encodeURIComponent(task.dist) +
-        CrawlConfig.ZONE_GET_URL + encodeURIComponent(task.zone);
+        let url = CrawlConfig.GET_URL + encodeURIComponent(task.job) + CrawlConfig.CITY_GET_URL + encodeURIComponent(task.city) +
+        CrawlConfig.DISTRICT_GET_URL + encodeURIComponent(task.dist);
         if (this.runningTaskData[url]) {
             setTimeout(() => {
                 this.event.emit('fail', task, proxy, true);

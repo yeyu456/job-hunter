@@ -48,8 +48,7 @@ const JobSchema = new mongoose.Schema({
         required: true
     },
     zone: {
-        type: String,
-        required: true
+        type: [String]
     },
     content: String,
     contentkey: [String]
@@ -63,7 +62,7 @@ JobSchema.statics.insertIfNotExist = function _insertIfNotExist(models) {
         let p = new Promise((resolve) => {
             JobModel.findOne({id: m.id}).exec((err, job) => {
                 if (err) {
-                    throw new DatabaseError(err, `Cannot query job with id ${m.id}`);
+                    throw new DatabaseError(err, `Cannot query job with dist ${m.dist}`);
                 } else if (job !== null){
                     Logger.debug(`Duplicated job with id ${m.id}`);
                     resolve();
@@ -80,6 +79,7 @@ JobSchema.statics.insertIfNotExist = function _insertIfNotExist(models) {
                 }
             });
         }).catch((err) => {
+            Logger.debug(JSON.stringify(m));
             Logger.error(err);
         });
         ps.push(p);

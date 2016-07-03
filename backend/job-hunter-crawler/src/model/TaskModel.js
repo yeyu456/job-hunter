@@ -16,10 +16,6 @@ const TaskSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    zone: {
-        type: String,
-        required: true
-    },
     startNum: {
         type: Number,
         min: 1,
@@ -39,7 +35,7 @@ const TaskSchema = new mongoose.Schema({
     }
 }, SCHEMA_OPTIONS);
 
-TaskSchema.index({job: 1, city: 1, dist: 1, zone: 1}, {unique: true, sparse: true});
+TaskSchema.index({job: 1, city: 1, dist: 1}, {unique: true, sparse: true});
 
 TaskSchema.pre('validate', function(next) {
     this.updated = Date.now();
