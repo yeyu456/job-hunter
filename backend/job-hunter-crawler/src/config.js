@@ -9,7 +9,7 @@ const Config = {
 
     EVENT_END: 'end',
 
-    MISSION_INTERVAL: 1000,
+    MISSION_INTERVAL: 3000,
 
     START_TIME: '17:00:00', //5:00 PM
 

@@ -5,22 +5,22 @@ const DatabaseError = require('./../../exception/DatabaseError.js');
 
 module.exports = class ProxyManager {
 
-    static getMostFastProxy() {
+    static getProxies() {
         return new Promise((resolve, reject) => {
-            mongoose.model('ProxyModel').findOneAndUpdate({
+            mongoose.model('ProxyModel').find({
                 valid: true
 
-            }, { $inc: { used: 1 }}, { sort: { used: 1, delay: 1 }, new: true }, (error, doc) => {
+            }).sort({used: 1, delay: 1}).exec((error, docs) => {
                 if (error) {
                     Logger.error(new DatabaseError(error, 'Failed to get proxy'));
                     reject();
 
-                } else if (!doc) {
+                } else if (!docs) {
                     Logger.error(new DatabaseError('Cannot find any valid proxy'));
                     reject();
 
                 } else {
-                    resolve(doc);
+                    resolve(docs);
                 }
             });
         });

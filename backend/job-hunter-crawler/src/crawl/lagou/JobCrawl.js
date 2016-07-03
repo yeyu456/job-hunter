@@ -42,31 +42,62 @@ module.exports = class JobCrawl {
         return new Promise((resolve, reject) => {
             setTimeout(function () {
                 Logger.info('start job crawl');
-                this._getTask(Config.CONCURRENT_TASK_NUM);
-                this.jobEvent.on(Config.EVENT_END, (error) => {
-                    if (error) {
-                        reject(error);
+                ProxyManager.getProxies().then((proxies) => {
+                    this.proxies = proxies;
+                }).then(() => {
+                    this._getTask(Config.CONCURRENT_TASK_NUM);
+                    this.jobEvent.on(Config.EVENT_END, (error) => {
+                        if (error) {
+                            reject(error);
 
-                    } else {
-                        resolve();
-                    }
+                        } else {
+                            resolve();
+                        }
+                    });
+                }).catch((error) => {
+                    reject(error);
                 });
             }.bind(this), Config.MISSION_INTERVAL);
         });
     }
 
-    _getTask(taskSize) {
-        mongoose.model('TaskModel').find({
-            $or: [
-                { 'updated': {$lt: Utils.getYesterday() }},
-                { $where: 'this.startNum <= this.maxNum' }
-            ]
-        }).sort({
+    _getTask(taskSize, excludeId) {
+        let cond = {
+            $and: [{
+                $or: [
+                    { 'updated': {$lt: Utils.getYesterday() }},
+                    { $where: 'this.startNum <= this.maxNum' }
+                ]
+            }, {
+                job: {
+                    $in: CrawlConfig.JOB_TYPES
+                }
+            }]
+        };
+        if (excludeId) {
+            cond = {
+                $and: [{
+                    $or: [
+                        { 'updated': {$lt: Utils.getYesterday() }},
+                        { $where: 'this.startNum <= this.maxNum' }
+                    ]
+                }, {
+                    job: {
+                        $in: CrawlConfig.JOB_TYPES
+                    }
+                }, {
+                    _id: {
+                        $ne: excludeId
+                    }
+                }]
+            };
+        }
+        mongoose.model('TaskModel').find(cond).sort({
             updateTime:1,
             city:1,
             job:1
 
-        }).limit(taskSize).exec((error, docs) => {
+        }).limit(taskSize * 5).exec((error, docs) => {
             if (error) {
                 error = new DatabaseError(error, 'Failed to get task.');
                 Logger.error(error);
@@ -77,8 +108,12 @@ module.exports = class JobCrawl {
                 this.jobEvent.emit(Config.EVENT_END);
 
             } else {
-                this._initTask(docs);
-                this._emulate(docs);
+                let tasks = [];
+                for (let i=0;i<taskSize && docs.length !== 0;i++) {
+                    tasks.push(docs.splice(Utils.getRandomInt(0, docs.length), 1)[0]);
+                }
+                this._initTask(tasks);
+                this._emulate(tasks);
             }
         });
     }
@@ -89,55 +124,87 @@ module.exports = class JobCrawl {
                 //Reset page num of yesterday
                 task.startNum = 1;
                 task.maxNum = 1;
+                task.updateTime = 0;
             }
         }
     }
 
     _emulate(tasks) {
+        if (this.proxies.length === 0) {
+            Logger.fatal('No proxies');
+            this.jobEvent.emit(Config.EVENT_END, new Error('No avaliable proxy'));
+            return;
+        }
         for (let task of tasks) {
-            ProxyManager.getMostFastProxy().then((proxy) => {
-                this.bridge.emulate(task, proxy);
-
-            }).catch(() => {
-                Logger.error(new PhantomError(`Task ${task.city}/${task.dist}/${task.zone} failed on emulate`));
-            });
+            this.bridge.emulate(task, this.proxies.shift());
         }
     }
 
     _crawl(task, proxy) {
-        async.whilst(
-            () => {
-                Logger.debug(`zone ${task.zone}:${task.startNum}/${task.maxNum}`);
-                return task.startNum <= task.maxNum;
-            },
-            (cb) => {
-                async.waterfall([
-                    this._network.bind(this, task, proxy),
-                    this._save.bind(this)
+        setTimeout(() => {
+            async.whilst(
+                () => {
+                    Logger.debug(`zone ${task.zone}:${task.startNum}/${task.maxNum}`);
+                    return task.startNum <= task.maxNum;
+                },
+                (cb) => {
+                    async.waterfall([
+                        this._network.bind(this, task, proxy),
+                        this._save.bind(this)
 
-                ], (err) => {
+                    ], (err) => {
+                        if (err) {
+                            Logger.error(err, `Task ${task.city}/${task.dist}/${task.zone} failed on page ${task.startNum}`);
+                            cb(err);
+                        } else {
+                            cb();
+                        }
+                    });
+                },
+                (err) => {
                     if (err) {
-                        Logger.debug('Failed task:' + JSON.stringify(task));
-                        cb(err);
+                        Logger.error(err, `Task ${task.city}/${task.dist}/${task.zone} failed on crawl`);
                     } else {
-                        cb();
+                        Logger.debug(`Task ${task.city}/${task.dist}/${task.zone} finished on crawl`);
                     }
-                });
-            },
-            (err) => {
-                if (err) {
-                    Logger.error(err, `Task ${task.city}/${task.dist}/${task.zone} failed on crawl`);
-                } else {
-                    Logger.debug(`Task ${task.city}/${task.dist}/${task.zone} finished on crawl`);
+                    Logger.debug('new task on _crawl');
+                    this._getTask(1);
                 }
-                this._getTask(1);
-            }
-        );
+            );
+        }, Config.MISSION_INTERVAL);
     }
 
-    _proxyFail(task, proxy) {
-        Logger.error(new ProxyError(`Task ${task.city}/${task.dist}/${task.zone} failed on bridge`));
-        ProxyManager.deleteProxy(proxy);
+    _proxyFail(task, proxy, isDuplicated) {
+        if (isDuplicated) {
+            Logger.info(`Task ${task.city}/${task.dist}/${task.zone} duplicated on bridge`);
+            this.proxies.push(proxy);
+
+        } else {
+            Logger.error(new ProxyError(`Task ${task.city}/${task.dist}/${task.zone} failed on bridge`));
+            ProxyManager.deleteProxy(proxy);
+        }
+        task.updateTime++;
+        mongoose.model('TaskModel').update({
+            job: task.job,
+            city: task.city,
+            dist: task.dist,
+            zone: task.zone
+
+        }, task, (err) => {
+            if (err) {
+                Logger.error(new DatabaseError(err, `error on updating failed Task ${task.city}/${task.dist}/${task.zone}`));
+            }
+            if (isDuplicated) {
+                Logger.debug('new task on duplicated');
+                setTimeout(() => {
+                    this._getTask(1, task._id);
+                }, Config.RETRY_INTERVAL);
+
+            } else {
+                Logger.debug('new task on _proxyFail');
+                this._getTask(1);
+            }
+        });
     }
 
     _network(task, proxy, cb) {
@@ -152,27 +219,33 @@ module.exports = class JobCrawl {
             pn : startPageNum,
             kd : task.job
         };
-
-        Client.post(url, options, data, proxy, CrawlConfig.SPEED_TIMEOUT).then((data) => {
+        let timeout = proxy.delay * 3;
+        Logger.debug('timeout ' + timeout);
+        Client.post(url, options, data, proxy, timeout).then((data) => {
             data = JSON.parse(data);
             if (Utils.isNotValidData(data)) {
                 throw new StructError('!!!data structure changed!!!', JSON.stringify(data));
 
-            } else if (parseInt(data['content']['pageNo']) !== startPageNum) {
-                Logger.warn(new JobDataError(
-                    `Unmatched page number ${startPageNum}-${data.content.pageNo} ${task.city}/${task.dist}/${task.zone} ${task.job}`));
-                cb(null, [], task, startPageNum);
-
             } else {
-                Logger.debug('total count' + data['content']['positionResult']['totalCount']);
-                Logger.debug('page size' + data['content']['pageSize']);
-                let maxNum = Utils.getMaxPageNum(
-                    data['content']['positionResult']['totalCount'],
-                    data['content']['pageSize']
-                );
-                Logger.debug('maxnum '+ maxNum);
-                
-                cb(null, data['content']['positionResult']['result'], task, maxNum);
+                //push back valid proxy
+                this.proxies.push(proxy);
+
+                if (parseInt(data['content']['pageNo']) !== startPageNum) {
+                    Logger.warn(new JobDataError(
+                        `Unmatched page number ${startPageNum}-${data.content.pageNo} ${task.city}/${task.dist}/${task.zone} ${task.job}`));
+                    cb(null, [], task, startPageNum);
+
+                } else {
+                    Logger.debug('total count' + data['content']['positionResult']['totalCount']);
+                    Logger.debug('page size' + data['content']['pageSize']);
+                    let maxNum = Utils.getMaxPageNum(
+                        data['content']['positionResult']['totalCount'],
+                        data['content']['pageSize']
+                    );
+                    Logger.debug('maxnum '+ maxNum);
+
+                    cb(null, data['content']['positionResult']['result'], task, maxNum);
+                }
             }
 
         }).catch((err) => {

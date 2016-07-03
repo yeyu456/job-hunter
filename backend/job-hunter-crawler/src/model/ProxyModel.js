@@ -29,7 +29,7 @@ const ProxySchema = new mongoose.Schema({
         required: true
     },
     delay: {
-        type: [Number],
+        type: Number,
         required: true
     },
     valid: {

@@ -29,7 +29,7 @@ const CrawlConfig = {
 
     //高端技术职位:gaoduanjishuzhiwei
     JOB_TYPES: [
-        'Java', 'Node.js', 'Javascript', 'gaoduanjishuzhiwei'
+        'Java', 'gaoduanjishuzhiwei'//, 'Node.js', 'Javascript'
     ],
 
     CITY_URL: 'http://www.lagou.com/jobs/positionAjax.json',
@@ -78,7 +78,7 @@ const CrawlConfig = {
 
     PROXY_HIGH_ANONYMOUS_URL: 'http://www.xicidaili.com/nn',
 
-    PROXY_CRAWL_PAGE_NUM: 5,
+    PROXY_CRAWL_PAGE_NUM: 10,
 
     SPEED_TEST_URL: 'http://pstatic.lagou.com/favicon.ico',
 

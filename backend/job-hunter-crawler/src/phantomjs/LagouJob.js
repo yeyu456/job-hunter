@@ -8,11 +8,11 @@ page.onResourceRequested = function(requestData, request) {
     //abort unnecessary resources request
     if (/JPG|jpg|png|PNG|\.css|baidu|google|(qq\.com)/.test(requestData['url'])) {
         request.abort();
-    }
-};
-page.onResourceTimeout = function (request) {
-    if (/px=default/.test(request['url'])) {
-        send({fail: true, url: request['url']});
+
+    //abort banned redirect
+    } else if (/fb\.html/.test(requestData['url'])) {
+        request.abort();
+        send({fail: true, url: requestData['url'], reason: 'ip banned'});
     }
 };
 var queue = [];
@@ -34,15 +34,16 @@ function open() {
     phantom.setProxy(data['proxy']['ip'], parseInt(data['proxy']['port']), data['proxy']['type'], '', '');
     page.settings.userAgent = data['proxy']['useragent'];
     page.settings.loadImages = false;
-    page.settings.resourceTimeout = 3000;
+    page.settings.resourceTimeout = 8000;
 
     page.open(data['url'], function(status) {
         if (status !== 'success') {
-            send({fail: true, url: data['url']});
+            send({fail: true, url: data['url'], reason: 'request failed with status ' + status});
 
         } else {
             send({success: true, url: data['url']});
         }
+        phantom.clearCookies();
         open();
     });
 }
