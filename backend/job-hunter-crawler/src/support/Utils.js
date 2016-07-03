@@ -1,4 +1,3 @@
-const urlencode = require('urlencode');
 const Config = require('./../config.js');
 const CrawlConfig = require('./../crawl.config.js');
 

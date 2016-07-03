@@ -1,6 +1,5 @@
 const EventEmitter = require('events');
 
-const urlencode = require('urlencode');
 const mongoose = require('mongoose');
 const async = require('async');
 
@@ -209,8 +208,8 @@ module.exports = class JobCrawl {
     _network(task, proxy, cb) {
         Logger.debug('network', task.dist);
         let startPageNum = task.startNum;
-        let url = CrawlConfig.CITY_URL + CrawlConfig.CITY_GET_URL + urlencode.encode(task.city, 'utf8') +
-            CrawlConfig.DISTRICT_GET_URL + urlencode.encode(task.dist, 'utf8') + CrawlConfig.CITY_URL_POSTFIX;
+        let url = CrawlConfig.CITY_URL + CrawlConfig.CITY_GET_URL + encodeURIComponent(task.city) +
+            CrawlConfig.DISTRICT_GET_URL + encodeURIComponent(task.dist) + CrawlConfig.CITY_URL_POSTFIX;
         let options = JSON.parse(CrawlConfig.DEFAULT_LAGOU_POST_HEADERS);
         let data = {
             first : false,

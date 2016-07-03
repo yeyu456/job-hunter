@@ -9,7 +9,6 @@
         "ws": "^1.1.0",
         "cheerio": "^0.20.0",
         "forever": "^0.15.2",
-        "urlencode": "^1.1.0",
         "nodemailer": "^2.4.2",
         "mkdirp": "^0.5.1",
         "mongoose": "^4.5.0",

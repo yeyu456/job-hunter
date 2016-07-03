@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const urlencode = require('urlencode');
 const cheerio = require('cheerio');
 
 require('./../../model/TaskModel.js');
@@ -25,7 +24,7 @@ function getTask() {
     let cityP = [];
     for (let city of CrawlConfig.CITIES) {
         let url = CrawlConfig.GET_URL + CrawlConfig.JOB_TYPES[0] + CrawlConfig.CITY_GET_URL +
-            urlencode.encode(city, 'utf8');
+            encodeURIComponent(city);
 
         let cp = Client.get(url, headers).then((body) => {
 
