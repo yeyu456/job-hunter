@@ -48,6 +48,14 @@ const CrawlConfig = {
 
     ZONE_GET_URL: '&bizArea=',
 
+    JOB_DETAIL_URL: 'http://www.lagou.com/jobs/',
+
+    JOB_DETAIL_URL_POSTFIX: '.html',
+
+    JOB_DETAIL_SELECTOR: '.job_bt',
+
+    JOB_ADDRESS_SELECTOR: '.work_addr',
+
 
 
     //****************** MOBILE LAGOU ******************//

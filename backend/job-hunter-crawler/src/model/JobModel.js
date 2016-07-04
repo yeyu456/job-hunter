@@ -50,8 +50,12 @@ const JobSchema = new mongoose.Schema({
     zone: {
         type: [String]
     },
-    content: String,
-    contentkey: [String]
+    address: {
+        type: String
+    },
+    content: {
+        type: String
+    }
 }, SCHEMA_OPTIONS);
 
 JobSchema.index({id: 1, companyId: 1}, {unique: true});

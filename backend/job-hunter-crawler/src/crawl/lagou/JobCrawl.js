@@ -39,24 +39,26 @@ module.exports = class JobCrawl {
 
     start() {
         return new Promise((resolve, reject) => {
-            setTimeout(function () {
+            this.jobEvent.on(Config.EVENT_END, (error) => {
+                if (error) {
+                    reject(error);
+
+                } else {
+                    resolve();
+                }
+            });
+            setTimeout(() => {
                 Logger.info('start job crawl');
                 ProxyManager.getProxies().then((proxies) => {
                     this.proxies = proxies;
+                    
                 }).then(() => {
                     this._getTask(Config.CONCURRENT_TASK_NUM);
-                    this.jobEvent.on(Config.EVENT_END, (error) => {
-                        if (error) {
-                            reject(error);
 
-                        } else {
-                            resolve();
-                        }
-                    });
                 }).catch((error) => {
                     reject(error);
                 });
-            }.bind(this), Config.MISSION_INTERVAL);
+            }, Config.MISSION_INTERVAL);
         });
     }
 
@@ -217,7 +219,7 @@ module.exports = class JobCrawl {
             kd : task.job
         };
         let timeout = proxy.delay * 3;
-        Logger.debug('timeout ' + timeout);
+        options['User-Agent'] = proxy.useragent;
         Client.post(url, options, data, proxy, timeout).then((data) => {
             data = JSON.parse(data);
             if (Utils.isNotValidData(data)) {
