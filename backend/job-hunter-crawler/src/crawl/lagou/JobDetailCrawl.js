@@ -76,8 +76,12 @@ module.exports = class JobDetailCrawl {
             cb();
 
         } else {
-            this._crawl(jobs).then(() => {
-                cb();
+            this.jobs = jobs;
+            ProxyManager.getProxies().then((proxies) => {
+                this.proxies = proxies;
+                for(let i=0;i<Config.CONCURRENT_TASK_NUM;i++) {
+                    setTimeout(this._crawl.bind(this), Config.MISSION_INTERVAL * i);
+                }
 
             }).catch((err) => {
                 Logger.error(err, 'running error.');
@@ -86,51 +90,73 @@ module.exports = class JobDetailCrawl {
         }
     }
 
-    _crawl(job) {
-        return ProxyManager.getProxies().then((proxies) => {
+    _crawl() {
+        if (this.proxies.length === 0) {
+            Logger.error('No valid proxy.');
 
-            async.queue(() => {
+        } else if (this.jobs.length === 0) {
+            Logger.info('Cannot find any job for update');
 
-            });
-            let url = CrawlConfig.JOB_DETAIL_URL + job.id + CrawlConfig.JOB_DETAIL_URL_POSTFIX;
-            let options = JSON.parse(CrawlConfig.DEFAULT_LAGOU_GET_HEADERS);
-            options['User-Agent'] = proxy.useragent;
+        } else {
+            let proxy = this.proxies.pop();
+            let job = this.jobs.pop();
 
-            return Client.get(url, options, proxy).then((body) => {
-                return this._parse(body);
+            this._network(job, proxy).catch((e) => {
+                throw new HttpError(e, `Failed to crawl job detail with proxy ${proxy.ip}`);
 
-            }).then((detail, address) => {
+            }).then(([detail, address]) => {
                 job.content = detail;
                 job.address = address;
                 return this._save(job);
+
+            }).then(()=> {
+                setTimeout(this._crawl.bind(this), Config.MISSION_INTERVAL);
+
+            }).catch((e) => {
+                if (e) {
+                    Logger.error(e);
+                    if (!(e instanceof DatabaseError)) {
+                        this.jobs.push(job);
+                    }
+                }
             });
+        }
+    }
+
+    _network(job, proxy) {
+        let url = CrawlConfig.JOB_DETAIL_URL + job.id + CrawlConfig.JOB_DETAIL_URL_POSTFIX;
+        let options = JSON.parse(CrawlConfig.DEFAULT_LAGOU_GET_HEADERS);
+        options['User-Agent'] = proxy.useragent;
+
+        return Client.get(url, options, proxy).then((body) => {
+            return this._parse(body);
         });
     }
 
     _parse(body) {
-        let $ = cheerio.load(body);
+        let $ = cheerio.load(body, {decodeEntities: false});
         let detail = $(CrawlConfig.JOB_DETAIL_SELECTOR).html();
-        let address = $(CrawlConfig.JOB_ADDRESS_SELECTOR).text();
+        let address = $(CrawlConfig.JOB_ADDRESS_SELECTOR).text().replace(/\s/gi, '');
         return [detail, address];
     }
 
     _save(job) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             mongoose.model('JobModel').update({
                 id: job.id,
                 companyId: job.companyId
+
             }, job, {
-                upsert: false,
-                new: true
+                upsert: false
+
             }, (err) => {
                 if (err) {
-                    Logger.error(new DatabaseError(err, `Failed to update job detail with id ${job.id}`));
-                    reject(err);
+                    throw new DatabaseError(err, `Failed to update job detail with id ${job.id}`);
 
                 } else {
                     resolve();
                 }
-            })
+            });
         })
     }
 };
