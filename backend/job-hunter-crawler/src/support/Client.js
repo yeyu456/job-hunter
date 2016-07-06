@@ -4,6 +4,7 @@ const Logger = require('./Log.js');
 const Utils = require('./Utils.js');
 const HttpError = require('./../exception/HttpError.js');
 const ProxyError = require('./../exception/ProxyError.js');
+const UrlMovedError = require('./../exception/UrlMovedError.js');
 
 module.exports = class Client {
 
@@ -27,6 +28,9 @@ module.exports = class Client {
             request.get(op, (error, res, body) => {
                 if (!error && res.statusCode === 200) {
                     resolve(body);
+
+                } else if (res.statusCode === 301) {
+                    reject(new UrlMovedError(error, `Get ${url} not exist`));
 
                 } else {
                     reject(new HttpError(error, `Get ${url} failed`));

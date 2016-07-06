@@ -14,6 +14,7 @@ const DatabaseError = require('./../../exception/DatabaseError.js');
 const HttpError = require('./../../exception/HttpError.js');
 const ProxyError = require('./../../exception/ProxyError.js');
 const JobDetailDataError = require('./../../exception/JobDetailDataError.js');
+const UrlMovedError = require('./../../exception/UrlMovedError.js');
 
 module.exports = class JobDetailCrawl {
 
@@ -113,8 +114,15 @@ module.exports = class JobDetailCrawl {
                 return body;
 
             }).catch((e) => {
-                ProxyManager.deleteProxy(proxy);
-                throw new HttpError(e, `Failed to crawl job detail with proxy ${proxy.ip}`);
+                if (e instanceof UrlMovedError) {
+                    Logger.error(new UrlMovedError(e, `Job ${job.id} gone.`));
+                    this.proxies.push(proxy);
+                    throw e;
+
+                } else {
+                    ProxyManager.deleteProxy(proxy);
+                    throw new HttpError(e, `Failed to crawl job detail with proxy ${proxy.ip}`);
+                }
 
             }).then((body) => {
                 let [detail, address] = this._parse(body);
@@ -132,7 +140,7 @@ module.exports = class JobDetailCrawl {
             }).catch((e) => {
                 if (e) {
                     Logger.error(e);
-                    if (!(e instanceof DatabaseError)) {
+                    if (!(e instanceof DatabaseError) && !(e instanceof UrlMovedError)) {
                         this.jobs.push(job);
                     }
                 }
