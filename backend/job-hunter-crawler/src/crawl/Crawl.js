@@ -1,6 +1,6 @@
 const JobCrawl = require('./lagou/JobCrawl.js');
-const ProxyCrawl = require('./lagou/JobDetailCrawl.js');
-const JobDetailCrawl = require('./proxy/ProxyCrawl.js');
+const JobDetailCrawl = require('./lagou/JobDetailCrawl.js');
+const ProxyCrawl = require('./proxy/ProxyCrawl.js');
 const Logger = require('./../support/Log.js');
 
 module.exports = class Crawl {
