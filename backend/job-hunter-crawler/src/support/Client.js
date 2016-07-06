@@ -29,7 +29,7 @@ module.exports = class Client {
                 if (!error && res.statusCode === 200) {
                     resolve(body);
 
-                } else if (res.statusCode === 301) {
+                } else if (res && res.statusCode === 301) {
                     reject(new UrlMovedError(error, `Get ${url} not exist`));
 
                 } else {

@@ -117,7 +117,7 @@ module.exports = class JobDetailCrawl {
                 if (e instanceof UrlMovedError) {
                     Logger.error(new UrlMovedError(e, `Job ${job.id} gone.`));
                     this.proxies.push(proxy);
-                    throw e;
+                    return '';
 
                 } else {
                     ProxyManager.deleteProxy(proxy);
@@ -125,16 +125,22 @@ module.exports = class JobDetailCrawl {
                 }
 
             }).then((body) => {
-                let [detail, address] = this._parse(body);
-                if (!detail) {
-                    Logger.debug(body);
-                    throw new JobDetailDataError(`Invalid job detail with job id ${job.id} proxy ${proxy.ip}`);
+                if (body === '') {
+                    job.content = '-';
+                    job.address = '-';
+                    
+                } else {
+                    let [detail, address] = this._parse(body);
+                    if (!detail) {
+                        Logger.debug(body);
+                        throw new JobDetailDataError(`Invalid job detail with job id ${job.id} proxy ${proxy.ip}`);
+                    }
+                    if (!address) {
+                        address = '-';
+                    }
+                    job.content = detail;
+                    job.address = address;
                 }
-                if (!address) {
-                    address = '-';
-                }
-                job.content = detail;
-                job.address = address;
                 return this._save(job);
 
             }).catch((e) => {
