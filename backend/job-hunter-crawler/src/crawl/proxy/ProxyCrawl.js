@@ -25,9 +25,9 @@ module.exports = class ProxyCrawl {
         return this._updateOldProxies().then(() => {
             this.num = Object.keys(this.proxies).length;
             console.log(this.num);
-            return new Promise((resolve) => {
+            /*return new Promise((resolve) => {
                 this._crawl(resolve);
-            });
+            });*/
         }).then(() => {
             return this._speedMesure();
         });
@@ -65,6 +65,7 @@ module.exports = class ProxyCrawl {
                             this.proxies[proxy.ip].updated = proxy.updated;
                         } else {
                             this.proxies[proxy.ip] = proxy;
+                            this.num++;
                         }
                     }
                 }

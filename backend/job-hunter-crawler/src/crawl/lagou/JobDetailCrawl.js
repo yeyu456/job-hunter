@@ -106,8 +106,8 @@ module.exports = class JobDetailCrawl {
             this.runningTask--;
 
         } else {
-            let proxy = this.proxies.pop();
-            let job = this.jobs.pop();
+            let proxy = this.proxies.shift();
+            let job = this.jobs.shift();
 
             this._network(job, proxy).then((body) => {
                 this.proxies.push(proxy);
@@ -120,7 +120,17 @@ module.exports = class JobDetailCrawl {
                     return '';
 
                 } else {
-                    ProxyManager.deleteProxy(proxy);
+                    if (proxy.fail) {
+                        proxy.fail++;
+                    } else {
+                        proxy.fail = 1;
+                    }
+                    if (proxy.fail > 3) {
+                        delete proxy.fail;
+                        ProxyManager.deleteProxy(proxy);
+                    } else {
+                        this.proxies.push(proxy);
+                    }
                     throw new HttpError(e, `Failed to crawl job detail with proxy ${proxy.ip}`);
                 }
 

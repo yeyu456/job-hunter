@@ -13,9 +13,9 @@ module.exports = class Crawl {
     }
 
     start() {
-        return this.proxy.start();
+        //return this.proxy.start();
         //return this.proxy.start().then(this.job.start.bind(this.job));
-        //return this.jobDetail.start();
+        return this.jobDetail.start();
     }
 
     end() {

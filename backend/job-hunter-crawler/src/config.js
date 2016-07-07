@@ -5,11 +5,11 @@ const Config = {
 
     //****************** TASK ******************//
 
-    CONCURRENT_TASK_NUM: 30,
+    CONCURRENT_TASK_NUM: 1,
 
     EVENT_END: 'end',
 
-    MISSION_INTERVAL: 1000,
+    MISSION_INTERVAL: 500,
 
     START_TIME: '17:00:00', //5:00 PM
 
