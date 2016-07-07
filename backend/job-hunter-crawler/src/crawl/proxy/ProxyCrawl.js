@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const async = require('async');
 const cheerio = require('cheerio');
 
+const Config = require('./../../config.js');
 const CrawlConfig = require('./../../crawl.config.js');
 const Logger = require('./../../support/Log.js');
 const Client = require('./../../support/Client.js');
@@ -16,10 +17,19 @@ module.exports = class ProxyCrawl {
 
     start() {
         Logger.info('start proxy crawl');
+        this.proxies = {};
+        this.num = 0;
+        setInterval(() => {
+            console.log('proxy left ' + this.num);
+        }, 2000);
         return this._updateOldProxies().then(() => {
+            this.num = Object.keys(this.proxies).length;
+            console.log(this.num);
             return new Promise((resolve) => {
                 this._crawl(resolve);
             });
+        }).then(() => {
+            return this._speedMesure();
         });
     }
 
@@ -50,7 +60,13 @@ module.exports = class ProxyCrawl {
                     Logger.warn(new ProxyError(`No proxy data in ${url}`));
 
                 } else {
-                    return this._speedMesure(proxies);
+                    for (let proxy of proxies) {
+                        if (this.proxies[proxy.ip]) {
+                            this.proxies[proxy.ip].updated = proxy.updated;
+                        } else {
+                            this.proxies[proxy.ip] = proxy;
+                        }
+                    }
                 }
 
             }).then(() => {
@@ -151,11 +167,11 @@ module.exports = class ProxyCrawl {
         return proxies;
     }
 
-    _speedMesure(proxies) {
+    _speedMesure() {
         return new Promise((resolve) => {
             let headers = JSON.parse(CrawlConfig.DEFAULT_LAGOU_GET_HEADERS);
             headers['User-Agent'] = Utils.getUserAgent();
-            async.each(proxies, (proxy, cb) => {
+            async.eachLimit(this.proxies, Config.CONCURRENT_TASK_NUM, (proxy, cb) => {
                 Client.speed(CrawlConfig.SPEED_TEST_URL, headers, proxy, CrawlConfig.SPEED_KEYWORD, CrawlConfig.SPEED_TIMEOUT).then((delay) => {
                     proxy.valid = true;
                     proxy.delay = delay;
@@ -177,6 +193,7 @@ module.exports = class ProxyCrawl {
                         if (err) {
                             Logger.error(new DatabaseError(err, `Cannot update proxy ${proxy.ip}`));
                         }
+                        this.num--;
                         cb();
                     });
                 });
@@ -184,6 +201,7 @@ module.exports = class ProxyCrawl {
                 if (err) {
                     Logger.error(new ProxyError(err));
                 }
+                Logger.debug('proxy crawl done');
                 resolve();
             });
         });
@@ -194,14 +212,14 @@ module.exports = class ProxyCrawl {
             mongoose.model('ProxyModel').find().exec((error, docs) => {
                 if (error) {
                     Logger.warn(new DatabaseError(error, 'Cannot get any old proxies.'));
-                    resolve([]);
 
                 } else {
-                    resolve(docs);
+                    for(let doc of docs) {
+                        this.proxies[doc.ip] = doc;
+                    }
                 }
+                resolve();
             });
-        }).then((proxies) => {
-            return this._speedMesure(proxies);
         });
     }
 };

@@ -96,7 +96,7 @@ const CrawlConfig = {
 
     SPEED_KEYWORD: 'lagou',
 
-    SPEED_TIMEOUT: 8000,
+    SPEED_TIMEOUT: 15000,
 
 
 

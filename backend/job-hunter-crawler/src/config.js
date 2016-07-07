@@ -5,7 +5,7 @@ const Config = {
 
     //****************** TASK ******************//
 
-    CONCURRENT_TASK_NUM: 10,
+    CONCURRENT_TASK_NUM: 30,
 
     EVENT_END: 'end',
 
