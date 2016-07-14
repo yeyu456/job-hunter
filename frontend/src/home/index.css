@@ -49,14 +49,38 @@ nav a {
 /* Side Bar */
 .sidebar {
      position: fixed;
-     top: 51px;
+     top: 5rem;
      bottom: 0;
      left: 0;
      z-index: 1000;
      display: block;
-     padding: 20px;
+     font-size:120%;
+     padding: 1.5rem;
      overflow-x: hidden;
      overflow-y: auto;
      background-color: rgb(245, 245, 245);
      border-right: 1px solid rgb(238, 238, 238);
+}
+.sidebar > .nav > li.active a {
+     color:white;
+}
+.sidebar > .nav > li.active {
+     background-color:#49C2FF;
+     border-radius:5px;
+}
+.sidebar > .nav > li.active > a:hover {
+     color:white;
+     background-color:#49C2FF;
+     border-radius:5px;
+}
+
+
+/* Footer */
+footer {
+     clear:both;
+     position: absolute;
+     bottom: 2rem;
+     left:50%;
+     height:2rem;
+     z-index:1000;
 }
