@@ -1,5 +1,9 @@
 
 /* Base setting */
+html,
+body {
+     height: 100%;
+}
 body {
      padding-top:50px; /* for the nav space */
      font-family: 'Open Sans',Arial,sans-serif;
@@ -22,7 +26,7 @@ nav {
      left:0;
      width:100%;
      padding:0.5rem;
-     background-color:#eaeff2;
+     background-color:#EAEFF2;
      background-image: url(./../assets/nav.png);
 }
 nav a {
@@ -34,7 +38,7 @@ nav a {
      border:1px solid #49C2FF;
      background-color:#49C2FF;
      padding:8px;
-     color:#ffffff;
+     color:#FFFFFF;
 }
 .logo {
      font-size:2.5rem;
@@ -58,8 +62,8 @@ nav a {
      padding: 1.5rem;
      overflow-x: hidden;
      overflow-y: auto;
-     background-color: rgb(245, 245, 245);
-     border-right: 1px solid rgb(238, 238, 238);
+     background-color: #F5F5F5;
+     border-right: 1px solid #EEEEEE;
 }
 .sidebar > .nav > li.active a {
      color:white;
@@ -73,6 +77,35 @@ nav a {
      background-color:#49C2FF;
      border-radius:5px;
 }
+
+
+/* Main */
+main {
+     position: relative;
+     top: 40%;
+     transform: translateY(-50%);
+}
+.search-area {
+     margin:0 auto;
+     float:none;
+     text-align: center;
+}
+.search-area input.form-control {
+     width:40rem;
+}
+.search-btn {
+     background-color:#E75954;
+     border-color:#E75954;
+     color:white;
+     margin-left:1rem;
+}
+.search-btn:hover,
+.search-btn:focus {
+     background-color:#FF625D;
+     border-color:#FF625D;
+     color:white;
+}
+
 
 
 /* Footer */
