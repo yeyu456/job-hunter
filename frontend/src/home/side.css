@@ -1,0 +1,26 @@
+.sidebar {
+    position: fixed;
+    top: 5rem;
+    bottom: 0;
+    left: 0;
+    z-index: 1000;
+    display: block;
+    font-size:120%;
+    padding: 1.5rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background-color: #F5F5F5;
+    border-right: 1px solid #EEEEEE;
+}
+.sidebar > .nav > li.active a {
+    color:white;
+}
+.sidebar > .nav > li.active {
+    background-color:#49C2FF;
+    border-radius:5px;
+}
+.sidebar > .nav > li.active > a:hover {
+    color:white;
+    background-color:#49C2FF;
+    border-radius:5px;
+}

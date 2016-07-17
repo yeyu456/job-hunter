@@ -1,0 +1,121 @@
+main {
+    position: relative;
+    top: 40%;
+    margin-top:8rem;
+}
+main.searching {
+    top:0%;
+}
+
+.search-area {
+    margin:1rem auto;
+    float:none;
+    text-align: center;
+}
+
+/* Search Input */
+.search-area input.form-control {
+    width:40rem;
+}
+
+/* Search Button */
+.search-btn {
+    background-color:#FF4968;
+    border-color:#FF4968;
+    color:white;
+    margin-left:1rem;
+    box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+}
+.search-btn:hover,
+.search-btn:focus {
+    opacity: 0.9;
+    color:white;
+    box-shadow: 0 0 0;
+}
+
+/* Search Results */
+.search-area .list-group {
+    margin:0 auto;
+    padding: 0;
+    float:none;
+    text-align: left;
+}
+.search-area .list-group-item {
+    background-color:#FAFAFA;
+}
+
+/* Job Data Layout */
+.job-header,
+.job-footer {
+    padding: 10px 0 10px 40px;
+}
+.job-item em {
+    font-size:150%;
+}
+
+/* Job Type Label */
+.label-java,
+.label-nodejs,
+.label-javascript,
+.label-industry {
+    font-weight: normal;
+    line-height: 2;
+    font-size:80%;
+    padding:0.5rem 1rem;
+    margin:0 0.5rem 0 1.5rem;
+    border-radius:6px;
+}
+.label-java {
+    background-color:#FF5722;
+}
+.label-nodejs {
+    background-color:#97D851;
+}
+.label-javascript {
+    background-color:#ECD13A;
+}
+
+/*Job Industry Field Label */
+.label-industry {
+    margin:0 0.5rem 0 0;
+    background-color:#00B38A;
+}
+
+/* Job Progress Bar */
+.salary-bar,
+.year-bar {
+    color:black;
+    width:50rem;
+    border:1px solid #F5F5F5;
+    border-radius:6px;
+    margin: 5px 0;
+}
+.salary-bar {
+    background-image: linear-gradient(to right, #71E271 12.5%, transparent 12.5%),
+    linear-gradient(to right, #FF2F52 17.5%, #F5F5F5 17.5%)
+}
+.salary-bar:before {
+    content:'薪水：';
+}
+.year-bar {
+    background-image: linear-gradient(to right, #FFB853 50%, #F5F5F5 50%);
+}
+.year-bar:before {
+    content:'经验：';
+}
+
+/* Job Created Time*/
+.job-created {
+    margin: 0 2rem 0 1rem;
+    font-weight: lighter;
+    font-size:80%;
+    color:#999999;
+}
+
+/* Job Location */
+.job-city {
+
+}
+.job-city:before {
+    content: "\e062  ";
+}
