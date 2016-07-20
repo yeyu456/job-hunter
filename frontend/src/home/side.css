@@ -7,8 +7,6 @@
     display: block;
     font-size:120%;
     padding: 1.5rem;
-    overflow-x: hidden;
-    overflow-y: auto;
     background-color: #F5F5F5;
     border-right: 1px solid #EEEEEE;
 }
