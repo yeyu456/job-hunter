@@ -119,3 +119,17 @@ main.searching {
 .job-city:before {
     content: "\e062  ";
 }
+
+
+/* Pagination apostrophe */
+.pagination > li > span {
+    border-top:0;
+    border-bottom:0;
+    color:#000000;
+}
+.pagination > li > span:hover,
+.pagination > li > span:focus {
+    color:#000000;
+    background-color:#FFFFFF;
+    z-index:1;
+}
