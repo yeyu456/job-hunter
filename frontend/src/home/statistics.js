@@ -6,6 +6,7 @@ let centerX = canvas.width / 2;
 let centerY = canvas.height / 2;
 let ctx = canvas.getContext('2d');
 
+let texts = ['0xe230', '0xe062', '0xa5', '0xe023', '0xe139', '0xe003'];
 
 function toDegrees (angle) {
     return angle * (180 / Math.PI);
@@ -76,21 +77,36 @@ class RegularHexagon {
         return points;
     }
 
+    _onHover(points, center) {
+        document.getElementById('canvas').addEventListener('mouseenter', (e) => {
+            let sLen = (this.len / 2) * Math.tan(toRadians(60));
+            if (e.offsetX > center.x + sLen) {
+                return;
+            } else if (e.offsetX < center.x - sLen) {
+                return;
+            } else if (e.offsetY > center.y + sLen) {
+                return;
+            } else if (e.offsetY < center.y - sLen) {
+                return;
+            }
+        });
+    }
+
     render() {
         let bLen = 10 + 60 * 2 * Math.cos(toRadians(30));
         let points = this._getAllBigPoint(bLen, this.center);
-        let texts = ['数量', '地区', '工资', '年限', '行业', '关键词'];
         let colors = [
             'rgb(45, 48, 53)',
-            'rgb(239, 58, 1)',
-            'rgb(144, 180, 75)',
-            'rgb(251, 226, 80)',
-            'rgb(255, 219, 183)',
-            'rgb(251, 255, 254'];
+            'rgb(255, 73, 104)',
+            'rgb(255, 226, 73)',
+            'rgb(73, 255, 134)',
+            'rgb(73, 195, 255)',
+            'rgb(134, 73, 255'];
         this.ctx.lineWidth = 1;
-        let texture = new Image();
-        texture.src = './../../assets/texture.png';
-        texture.onload = () => {
+        this.ctx.font = "25px Glyphicons Halflings";
+        let font = new Font();
+        //this.ctx.fillText('', 10, 10);
+        font.onload = () => {
             for(let i=0;i<points.length;i++) {
                 this.ctx.fillStyle = colors[i];
                 let subPoints = this._getAllPoint(this.len, points[i]);
@@ -102,11 +118,12 @@ class RegularHexagon {
                 this.ctx.lineTo(subPoints[0].x, subPoints[0].y);
                 this.ctx.closePath();
                 this.ctx.fill();
-                this.ctx.fillStyle = 'rgb(197, 194, 187)';
-                this.ctx.font = "20px serif";
-                this.ctx.fillText(texts[i], points[i].x - this.len / 3, points[i].y);
+                this.ctx.fillStyle = 'white';
+                this.ctx.fillText(String.fromCharCode(texts[i]), points[i].x - this.len / 4, points[i].y + 10);
             }
         };
+        font.fontFamily = 'Glyphicons Halflings';
+        font.src = './../../libs/bootstrap/fonts/glyphicons-halflings-regular.ttf'
     }
 }
 
