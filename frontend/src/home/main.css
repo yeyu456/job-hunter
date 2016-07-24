@@ -1,11 +1,11 @@
-main {
+section {
     position: relative;
     top: 40%;
     min-height: 85%;
     margin-top:8rem;
     margin-bottom:2rem;
 }
-main.searching {
+section.searching {
     top:0;
 }
 
